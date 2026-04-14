@@ -4,7 +4,7 @@ import time
 
 from neo4j import GraphDatabase
 import pandas as pd
-from agents.src.react import creat_react_agent, tool_calls
+from agents.src.react import creat_react_agent, format_examples, tool_calls
 from common.env_setup import apply_env
 from common.models import get_llm_with_trace
 from agents.prompts.hotpot_examples import react_examples
@@ -20,9 +20,8 @@ from eval.test.matrics import (
     build_context_inconsistency_metric,
     build_logical_inconsistency_metric,
 )
-from langchain.callbacks import get_openai_callback
 
-from eval.test.utils import FullReActTrace, get_database_session
+from eval.test.utils import FullReActTrace, get_database_session, get_usage_callback
 from knowledge_graph.src.retrieve_data import retrieve_memories
 
 
@@ -38,7 +37,7 @@ def train(data_path: str | Path):
         question = row["question"]
         expected = row.get("answer")
         try:
-            actual = agent.invoke({"input": question, "examples": react_examples})
+            actual = agent.invoke({"input": question, "examples": format_examples(react_examples)})
         except Exception as e:
             actual = f"ERROR: {e}"
         print(f"Question: {question} | Expected: {expected} | Actual: {actual['output']}")
@@ -62,16 +61,16 @@ def test(data_path: str | Path, output_path: str | Path):
         tool_calls.clear()
         expected_output = row["answer"]
         question = row["question"]
-        with get_openai_callback() as cb:
+        with get_usage_callback() as cb:
             agent_start = time.perf_counter()
-            actual_answer = agent.invoke({"input": question, "examples": react_examples})
+            actual_answer = agent.invoke({"input": question, "examples": format_examples(react_examples)})
             # Extract output if it's a dict
             if isinstance(actual_answer, dict):
                 actual_answer = actual_answer.get("output", str(actual_answer))
             agent_end = time.perf_counter()
             print(f"[{i}] Agent took {agent_end - agent_start:.4f} seconds")
 
-            trace_text = trace_handler.trace.split("Begin!\n")[1] 
+            trace_text = trace_handler.trace.split("Begin!\n", 1)[1] if "Begin!\n" in trace_handler.trace else trace_handler.trace
             
             is_exact = expected_output in actual_answer
             success += int(is_exact)
@@ -161,16 +160,16 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
             mem_start = time.perf_counter()
             experience_examples = retrieve_memories(question, session=session)
             mem_end = time.perf_counter()
-            with get_openai_callback() as cb:
+            with get_usage_callback() as cb:
                 agent_start = time.perf_counter()
-                actual_answer = agent.invoke({"input": question, "examples": experience_examples})
+                actual_answer = agent.invoke({"input": question, "examples": format_examples(experience_examples)})
                 # Extract output if it's a dict
                 if isinstance(actual_answer, dict):
                     actual_answer = actual_answer.get("output", str(actual_answer))
                 agent_end = time.perf_counter()
                 print(f"[{i}] Agent took {agent_end - agent_start:.4f} seconds")
 
-                trace_text = trace_handler.trace.split("Begin!\n")[1] 
+                trace_text = trace_handler.trace.split("Begin!\n", 1)[1] if "Begin!\n" in trace_handler.trace else trace_handler.trace
                 
                 is_exact = expected_output in actual_answer
                 success += int(is_exact)

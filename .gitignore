@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 .deepeval
 output/
+eval/data/mini_*.csv
+eval/data/*_smoke_results.csv

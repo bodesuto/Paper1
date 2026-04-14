@@ -1,4 +1,3 @@
-import os
 import re
 import json
 from dataclasses import dataclass
@@ -6,9 +5,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from common.logger import get_logger
+from common.deepeval_models import get_deepeval_llm
 
 from deepeval.metrics import GEval
-from deepeval.models import AzureOpenAIModel
 from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval.test_case import LLMTestCaseParams
 
@@ -206,35 +205,6 @@ class TraceScorerConfig:
     # If ANY "good score" < threshold -> hallucinated
     hallucination_threshold: float = 0.5
 
-def build_azure_model_from_env() -> AzureOpenAIModel:
-    """
-    Requires env:
-      AZURE_OPENAI_ENDPOINT
-      AZURE_OPENAI_API_KEY
-      AZURE_OPENAI_API_VERSION
-      AZURE_OPENAI_DEPLOYMENT_NAME
-    """
-    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-    api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    api_version = os.getenv("AZURE_OPENAI_API_VERSION")
-    deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
-
-    if not (endpoint and api_key and api_version and deployment):
-        raise ValueError(
-            "Missing Azure env vars. Need AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, "
-            "AZURE_OPENAI_API_VERSION, AZURE_OPENAI_DEPLOYMENT_NAME"
-        )
-
-    return AzureOpenAIModel(
-        model_name="gpt-4o",
-        deployment_name=deployment,
-        azure_openai_api_key=api_key,
-        openai_api_version=api_version,
-        azure_endpoint=endpoint,
-        temperature=0,
-    )
-
-
 def build_metrics(model) -> List[Any]:
     """
     Returns metric instances (mix of 0..1 metrics and binary 'badness' metrics).
@@ -293,7 +263,7 @@ def score_traces(
     Saves JSON list to output_path.
     """
     config = config or TraceScorerConfig()
-    model = build_azure_model_from_env()
+    model = get_deepeval_llm()
     metrics = build_metrics(model)
 
     results: List[Dict[str, Any]] = []

@@ -1,12 +1,8 @@
 import json
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, List
-
-from diagnostics.hil.src.app import run_streamlit
-
-from typing import List, Dict, Any
-from pathlib import Path
-import json
 
 from common.logger import get_logger
 
@@ -81,4 +77,5 @@ def load_reviews(path: str | Path) -> Dict[str, Any]:
 
 def run_hil_app(traces: List[Dict[str, Any]], reviews_path: str | Path) -> None:
     logger.info("Starting HIL Streamlit app with %d traces", len(traces))
-    run_streamlit(traces, reviews_path)
+    app_path = Path(__file__).resolve().parent / "app.py"
+    subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)], check=True)

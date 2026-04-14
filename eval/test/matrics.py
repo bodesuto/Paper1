@@ -1,7 +1,6 @@
 import os
 
 from deepeval.test_case import LLMTestCase, ToolCall
-from deepeval.models import AzureOpenAIModel
 
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -12,7 +11,7 @@ from deepeval.metrics import (
     GEval,
 )
 from deepeval.test_case import LLMTestCaseParams
-from common.config import AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_DEPLOYMENT_NAME, AZURE_OPENAI_ENDPOINT
+from common.deepeval_models import get_deepeval_llm
 
 
 def build_instruction_inconsistency_metric(model):
@@ -153,13 +152,7 @@ Return ONLY 0 or 1.
 
 
 
-model = AzureOpenAIModel(
-    model_name=AZURE_OPENAI_DEPLOYMENT_NAME,
-    deployment_name=AZURE_OPENAI_DEPLOYMENT_NAME,
-    azure_openai_api_key=AZURE_OPENAI_API_KEY,
-    openai_api_version=AZURE_OPENAI_API_VERSION,
-    azure_endpoint=AZURE_OPENAI_ENDPOINT,
-    temperature=0)
+model = get_deepeval_llm()
 
 def is_bad_call(call):
     output = call["output"].lower()

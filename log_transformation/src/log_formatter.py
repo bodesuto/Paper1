@@ -34,7 +34,8 @@ def extract_chain_text(run):
 
 def extract_observation(run):
     """Extract tool output text from tool runs."""
-    if run.get("type") == "tool":
+    run_type = run.get("type") or run.get("run_type")
+    if run_type == "tool":
         out = run.get("outputs", {}).get("output", "")
         return clean_text(out) if out else ""
     return ""
@@ -109,21 +110,23 @@ def extract_reasoning_trace(run):
     # ========== TRAVERSE RUN TREE ==========
 
     for r in child_runs:
+        run_type = r.get("type") or r.get("run_type")
 
         # ---------------- LLMChain ----------------
-        if r.get("type") == "chain" and r.get("name") == "LLMChain":
+        if run_type == "chain" and r.get("name") == "LLMChain":
             text = extract_chain_text(r)
             process_llm_text(text)
 
         # ---------------- TOOL CALL ----------------
-        elif r.get("type") == "tool":
+        elif run_type == "tool":
             obs = extract_observation(r)
             if obs:
                 steps.append(("Observation", summarize_observation(obs)))
 
         # ---------------- NESTED CHAINS ----------------
         for c in r.get("child_runs", []):
-            if c.get("type") == "chain" and c.get("name") == "LLMChain":
+            child_type = c.get("type") or c.get("run_type")
+            if child_type == "chain" and c.get("name") == "LLMChain":
                 text = extract_chain_text(c)
                 process_llm_text(text)
 
@@ -162,14 +165,14 @@ def write_react_traces(in_json_path: str | Path, out_txt_path: str | Path):
     out_txt_path = Path(out_txt_path)
     out_txt_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with out_txt_path.open("w", encoding="utf-8") as f:
-        extracted_runs = []
-        for run in episodes:
-            cleaned_round = extract_reasoning_trace(run)
+    extracted_runs = []
+    for run in episodes:
+        cleaned_round = extract_reasoning_trace(run)
+        if cleaned_round.strip():
             extracted_runs.append(cleaned_round)
 
-            with open(out_txt_path, "w", encoding="utf-8") as f:
-                for item in extracted_runs:
-                    f.write(item + "\n\n" + "="*80 + "\n\n")
+    with out_txt_path.open("w", encoding="utf-8") as f:
+        for item in extracted_runs:
+            f.write(item + "\n\n" + "=" * 80 + "\n\n")
 
     logger.info("Wrote ReAct traces to %s", out_txt_path)

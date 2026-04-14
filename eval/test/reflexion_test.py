@@ -20,10 +20,9 @@ from eval.test.matrics import (
     build_context_inconsistency_metric,
     build_logical_inconsistency_metric,
 )
-from langchain.callbacks import get_openai_callback
 
 from eval.test.react_test import get_database_session
-from eval.test.utils import FullReActTrace
+from eval.test.utils import FullReActTrace, get_usage_callback
 from knowledge_graph.src.retrieve_data import retrieve_memories
 
 def train(data_path: str | Path):
@@ -59,13 +58,13 @@ def test(data_path: str | Path, output_path: str | Path):
         expected_output = row["answer"]
         question = row["question"]
         agent = creat_react_agent(llm=get_llm_with_trace(trace_handler))
-        with get_openai_callback() as cb:
+        with get_usage_callback() as cb:
             agent_start = time.perf_counter()
             actual_answer, _ = reflexion_agent_run(question, examples=react_examples, trace_handler=trace_handler, llm=get_llm_with_trace(trace_handler), agent=agent)
             agent_end = time.perf_counter()
             print(f"[{i}] Agent took {agent_end - agent_start:.4f} seconds")
 
-            trace_text = trace_handler.trace.split("Begin!\n")[1]
+            trace_text = trace_handler.trace.split("Begin!\n", 1)[1] if "Begin!\n" in trace_handler.trace else trace_handler.trace
             
             is_exact = expected_output in actual_answer
             success += int(is_exact)
@@ -160,7 +159,7 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
             experience_examples = retrieve_memories(question, session=session)
             mem_end = time.perf_counter()
             
-            with get_openai_callback() as cb:
+            with get_usage_callback() as cb:
                 agent_start = time.perf_counter()
                 # Create agent for this iteration with memory-augmented examples
                 

@@ -26,6 +26,7 @@ def run_to_dict(run):
         "id": str(run.id),
         "parent_run_id": str(run.parent_run_id) if run.parent_run_id else None,
         "name": run.name,
+        "type": run.run_type,
         "run_type": run.run_type,
         "inputs": run.inputs,
         "outputs": run.outputs,
@@ -38,16 +39,22 @@ def run_to_dict(run):
 
 
 def export_runs(
-    project_id: str,
+    project_id: str | None,
+    project_name: str | None,
     output_path: str,
     include_stats: bool = False,
     include_total_stats: bool = False,
 ):
    
     client = Client()
-
-    logger.info("Fetching runs for project_id=%s", project_id)
-    runs = client.list_runs(project_id=project_id)
+    if project_id:
+        logger.info("Fetching runs for project_id=%s", project_id)
+        runs = client.list_runs(project_id=project_id)
+    elif project_name:
+        logger.info("Fetching runs for project_name=%s", project_name)
+        runs = client.list_runs(project_name=project_name)
+    else:
+        raise ValueError("Either project_id or project_name must be provided.")
 
     parent_run_ids = []
     for r in runs:

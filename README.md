@@ -51,7 +51,7 @@ common/               # Shared config, models, logging
 * Python 3.10+ 
 * Neo4j (vector index support) 
 * LangSmith account 
-* Azure OpenAI LLM provider configured
+* Google Gemini API configured
 
 ## Create virtual environment
 
@@ -81,17 +81,31 @@ pip install -r requirements.txt
 Create a `.env` file following the `.env.example` file:
 
 ```
-OPENAI_API_KEY=...
+GOOGLE_API_KEY=...
+GEMINI_MODEL_NAME=gemini-2.5-flash
+GEMINI_EMBEDDING_MODEL=models/gemini-embedding-001
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=...
 NEO4J_DATABASE=neo4j
-LANGSMITH_PROJECT_ID=...
-AZURE_OPENAI_API_KEY=...
-AZURE_OPENAI_ENDPOINT=...
-AZURE_OPENAI_DEPLOYMENT_NAME=...
+LANGSMITH_PROJECT=...
+LANGSMITH_PROJECT_ID=...  # optional, preferred if available
+CONFIDENT_API_KEY=...     # optional until you run KBV / DeepEval
 ```
 ---
+
+# Recommended Reproduction Path
+
+Start with cheap smoke tests before running the full pipeline:
+
+```bash
+python scripts/run_test_llm.py
+python scripts/run_prepare_mini_data.py --size 3
+python scripts/run_react_smoke.py --limit 1
+python scripts/run_reflexion_smoke.py --limit 1
+```
+
+Once those pass, continue with the full workflow below.
 
 # Full Pipeline Execution
 

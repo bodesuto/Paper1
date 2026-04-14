@@ -9,6 +9,15 @@ import json
 
 logger = get_logger(__name__)
 
+
+def _extract_question(trace: str) -> str:
+    if not trace:
+        return ""
+    if trace.startswith("Question: "):
+        first_line = trace.splitlines()[0]
+        return first_line.replace("Question: ", "", 1).strip()
+    return ""
+
 def rca_for_run(trace_text: str):
     prompt = DIAGNOSE_REACT_TRACE_PROMPT.format(trace=trace_text)
     resp = get_llm().invoke(prompt)
@@ -39,7 +48,7 @@ def rca_for_all(traces: List[str],
     results = []
 
     for trace in traces:
-        question=trace.split("Question: ")[1].split("\nThought:")[0]
+        question = _extract_question(trace)
 
         # Skip empty traces
         if not trace or "Thought:" not in trace:

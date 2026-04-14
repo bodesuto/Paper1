@@ -1,12 +1,19 @@
-from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
-from langchain.callbacks.base import BaseCallbackHandler
-from langchain.callbacks.manager import CallbackManager
-from .config import AZURE_OPENAI_DEPLOYMENT_NAME, AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+from langchain_google_genai import (
+    ChatGoogleGenerativeAI,
+    GoogleGenerativeAIEmbeddings,
+)
+
+try:
+    from langchain_core.callbacks import BaseCallbackHandler
+except ImportError:
+    from langchain.callbacks.base import BaseCallbackHandler
+
+from .config import GEMINI_MODEL_NAME, GEMINI_EMBEDDING_MODEL
 from .env_setup import apply_env
 
 def get_llm():
     apply_env()
-    return AzureChatOpenAI(azure_deployment=AZURE_OPENAI_DEPLOYMENT_NAME)
+    return ChatGoogleGenerativeAI(model=GEMINI_MODEL_NAME, temperature=0)
 
 
 def get_llm_with_trace(trace_handler: BaseCallbackHandler):
@@ -15,17 +22,16 @@ def get_llm_with_trace(trace_handler: BaseCallbackHandler):
     Returns tuple of (llm, trace_handler).
     """
     apply_env()
-    
-    cb_manager = CallbackManager([trace_handler])
-    
-    llm = AzureChatOpenAI(
-        azure_deployment=AZURE_OPENAI_DEPLOYMENT_NAME,
-        callbacks=cb_manager
+
+    llm = ChatGoogleGenerativeAI(
+        model=GEMINI_MODEL_NAME,
+        temperature=0,
+        callbacks=[trace_handler],
     )
-    
+
     return llm
 
 
 def get_embeddings():
     apply_env()
-    return AzureOpenAIEmbeddings(azure_deployment=AZURE_OPENAI_EMBEDDING_DEPLOYMENT)
+    return GoogleGenerativeAIEmbeddings(model=GEMINI_EMBEDDING_MODEL)

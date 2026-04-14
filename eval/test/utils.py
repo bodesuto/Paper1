@@ -1,4 +1,9 @@
-from langchain.callbacks.base import BaseCallbackHandler
+from contextlib import contextmanager
+
+try:
+    from langchain_core.callbacks import BaseCallbackHandler
+except ImportError:
+    from langchain.callbacks.base import BaseCallbackHandler
 from neo4j import GraphDatabase
 
 from common.config import NEO4J_PASSWORD, NEO4J_URI, NEO4J_USER
@@ -8,6 +13,22 @@ def get_database_session():
     apply_env()
     driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
     return driver.session()
+
+
+class DummyUsageCallback:
+    def __init__(self):
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+        self.total_tokens = 0
+        self.successful_requests = 0
+        self.total_cost = 0.0
+
+
+@contextmanager
+def get_usage_callback():
+    # Gemini does not expose OpenAI callback accounting through LangChain's
+    # get_openai_callback API, so we provide a no-op tracker to keep eval flows alive.
+    yield DummyUsageCallback()
 
 class FullReActTrace(BaseCallbackHandler):
     def __init__(self):

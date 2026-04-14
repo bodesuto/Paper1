@@ -15,6 +15,21 @@ from knowledge_graph.cyphers.crud_cyphers import insert_cypher, embedding_cypher
 logger = get_logger(__name__)
 
 
+def _infer_success(payload: Dict[str, Any]) -> bool:
+    if isinstance(payload.get("success"), bool):
+        return payload["success"]
+    review_score = payload.get("review_score")
+    if review_score is not None:
+        try:
+            return float(review_score) > 3.0
+        except Exception:
+            pass
+    status = payload.get("status")
+    if isinstance(status, bool):
+        return status
+    return False
+
+
 def insert_classified_payloads(
     classified: Iterable[Dict[str, Any]],
 ):
@@ -65,7 +80,12 @@ def insert_classified_payloads(
                     # fallback to embed_documents if embed_query not available
                     emb = embeddings.embed_documents([inputs])[0]
 
+                payload["success"] = _infer_success(payload)
                 payload["embedding"] = emb
+                payload.setdefault("review_score", payload.get("review_score"))
+                payload.setdefault("vocab", {})
+                payload["vocab"].setdefault("attributes", payload["vocab"].get("attributes", []))
+                payload["vocab"].setdefault("entities", payload["vocab"].get("entities", []))
 
                 with driver.session(database=database) as session:
                     try:

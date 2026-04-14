@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 def _req(name: str) -> str:
@@ -7,20 +8,23 @@ def _req(name: str) -> str:
         raise ValueError(f"Missing required env var: {name}")
     return v
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(PROJECT_ROOT / ".env")
 
-load_dotenv()
-# Azure
-AZURE_OPENAI_ENDPOINT = _req("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_KEY = _req("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
-AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4o")
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002")
+# Gemini
+GOOGLE_API_KEY = _req("GOOGLE_API_KEY")
+GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
+GEMINI_EMBEDDING_MODEL = os.getenv(
+    "GEMINI_EMBEDDING_MODEL",
+    "models/gemini-embedding-001",
+)
 
 # LangSmith
-LANGSMITH_PROJECT = _req("LANGSMITH_PROJECT")
+LANGSMITH_PROJECT = os.getenv("LANGSMITH_PROJECT", "default")
+LANGSMITH_PROJECT_ID = os.getenv("LANGSMITH_PROJECT_ID")
 OUTPUT_PATH = os.getenv("OUTPUT_PATH", f"./output/langsmith_runs_{LANGSMITH_PROJECT}.json")
 DATA_PATH = os.getenv("DATA_PATH", "./eval/data")
-CONFIDENT_API_KEY = _req("CONFIDENT_API_KEY")
+CONFIDENT_API_KEY = os.getenv("CONFIDENT_API_KEY")
 
 # Neo4j
 NEO4J_URI = os.getenv("NEO4J_URI")

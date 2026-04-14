@@ -4,23 +4,31 @@ WITH $payload AS data
 MERGE (t:Trace { question: data.question })
 ON MATCH SET
     t.trace        = data.trace,
+    t.success      = data.success,
+    t.memory_type  = CASE WHEN data.success THEN "experience" ELSE "insight" END,
     t.explanation  = data.rca.explanation,
     t.root_cause   = data.rca.root_cause,
     t.insights     = data.rca.insights,
     t.embedding    = data.embedding,
     t.intent       = data.vocab.intent,
     t.entities     = data.vocab.entities,
+    t.attributes   = data.vocab.attributes,
+    t.review_score = data.review_score,
     t.updated_at   = timestamp()
 
 ON CREATE SET
     t.id           = randomUUID(),
     t.trace        = data.trace,
+    t.success      = data.success,
+    t.memory_type  = CASE WHEN data.success THEN "experience" ELSE "insight" END,
     t.explanation  = data.rca.explanation,
     t.root_cause   = data.rca.root_cause,
     t.insights     = data.rca.insights,
     t.embedding    = data.embedding,
     t.intent       = data.vocab.intent,
     t.entities     = data.vocab.entities,
+    t.attributes   = data.vocab.attributes,
+    t.review_score = data.review_score,
     t.created_at   = timestamp()
 
 WITH t, data,
@@ -41,10 +49,11 @@ WITH t, collect(a.name) AS attributes
 RETURN {
     question: t.question,
     trace: t.trace,
+    success: t.success,
+    memory_type: t.memory_type,
     explanation: t.explanation,
     root_cause: t.root_cause,
     insights: t.insights,
-    success: t.success,
     embedding: t.embedding,
     vocab: {
         intent: t.intent,
@@ -73,7 +82,7 @@ retrieve_cypher = """
   $entities AS q_entities
 
 // Get top-$k by pure vector similarity first
-CALL db.index.vector.queryNodes('trace_embedding_index', 30, q_emb)
+CALL db.index.vector.queryNodes('trace_embedding_index', 50, q_emb)
 YIELD node, score AS embedding_score
 
 // Compute symbolic matches
@@ -84,12 +93,13 @@ WITH node, embedding_score,
 
 // Equal-weight combined score
 WITH node,
+     labels(node) AS labels,
      (embedding_score +
       intent_score +
       size(attr_overlap) +
       size(ent_overlap)) AS total_score
 ORDER BY total_score DESC
-LIMIT 3
+LIMIT 12
 
-RETURN node, total_score;
+RETURN node, labels, total_score;
     """

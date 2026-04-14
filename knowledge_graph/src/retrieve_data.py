@@ -24,7 +24,7 @@ def retrieve_memories(query, session):
         session: Neo4j session object for executing Cypher queries
     
     Returns:
-        str: Formatted string of example traces (separated by "---")
+        dict: {"experiences": [...], "insights": [...]} prompt memory payload
     """
     embeddings = get_embeddings()
     
@@ -49,13 +49,32 @@ def retrieve_memories(query, session):
     end = time.perf_counter()
     logger.info(f"Cypher retrieval took: {end - start:.4f}s")
     
-    # Extract traces from results
-    experiences = [record["node"].get("trace") for record in result]
-    logger.info(f"Retrieved {len(experiences)} experiences from knowledge graph")
-    
-    # Pad with react examples if we have fewer than 3 experiences
-    if len(experiences) < 3:
-        padding_count = 3 - len(experiences)
-        experiences.extend(react_examples[:padding_count])
-        logger.info(f"Padded with {padding_count} examples from react_examples")
-    return experiences
+    experience_memories = []
+    insight_memories = []
+
+    for record in result:
+        node = record["node"]
+        labels = record["labels"]
+        if "Experience" in labels and node.get("trace"):
+            experience_memories.append(node.get("trace"))
+        elif "Insight" in labels:
+            insight = node.get("insights") or node.get("explanation") or node.get("root_cause")
+            if insight:
+                insight_memories.append(insight)
+
+    logger.info(
+        "Retrieved %d experiences and %d insights from knowledge graph",
+        len(experience_memories),
+        len(insight_memories),
+    )
+
+    # Pad successful traces with hand-written examples if we have too few.
+    if len(experience_memories) < 3:
+        padding_count = 3 - len(experience_memories)
+        experience_memories.extend(react_examples[:padding_count])
+        logger.info("Padded with %d default examples", padding_count)
+
+    return {
+        "experiences": experience_memories[:3],
+        "insights": insight_memories[:3],
+    }

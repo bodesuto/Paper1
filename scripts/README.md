@@ -17,6 +17,9 @@ These scripts orchestrate:
 
 scripts/
 ├── run_test_llm.py          # Simple LLM connectivity test
+├── run_prepare_mini_data.py # Create tiny train/validation CSVs
+├── run_react_smoke.py       # Cheap ReAct smoke test (no DeepEval)
+├── run_reflexion_smoke.py   # Cheap Reflexion smoke test (no DeepEval)
 ├── run_export.py            # Export LangSmith runs → JSON
 ├── run_format_trace.py      # JSON → ReAct trace TXT
 ├── run_rca.py               # RCA diagnosis
@@ -82,3 +85,13 @@ Runs Reflexion evaluation (training + testing + dual memory).
 Utility
 run_test_llm.py
 Quick sanity check that the configured LLM works.
+
+Smoke test utilities
+run_prepare_mini_data.py
+Creates tiny CSV files such as `mini_train_3.csv` and `mini_validation_3.csv`.
+
+run_react_smoke.py
+Runs ReAct on a very small CSV without DeepEval or Neo4j.
+
+run_reflexion_smoke.py
+Runs Reflexion on a very small CSV without DeepEval or Neo4j.
