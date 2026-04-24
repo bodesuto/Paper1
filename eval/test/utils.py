@@ -6,22 +6,28 @@ except ImportError:
     from langchain.callbacks.base import BaseCallbackHandler
 from neo4j import GraphDatabase
 
-from common.config import NEO4J_PASSWORD, NEO4J_URI, NEO4J_USER
+from common.config import NEO4J_DATABASE, NEO4J_PASSWORD, NEO4J_URI, NEO4J_USER
 from common.env_setup import apply_env
 
+@contextmanager
 def get_database_session():
     apply_env()
     driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
-    return driver.session()
+    session = driver.session(database=NEO4J_DATABASE) if NEO4J_DATABASE else driver.session()
+    try:
+        yield session
+    finally:
+        session.close()
+        driver.close()
 
 
 class DummyUsageCallback:
     def __init__(self):
-        self.prompt_tokens = 0
-        self.completion_tokens = 0
-        self.total_tokens = 0
-        self.successful_requests = 0
-        self.total_cost = 0.0
+        self.prompt_tokens = None
+        self.completion_tokens = None
+        self.total_tokens = None
+        self.successful_requests = None
+        self.total_cost = None
 
 
 @contextmanager

@@ -1,271 +1,118 @@
-# Addressing Hallucinations in Generative AI Agents using Observability and Dual Memory Knowledge Graphs
+# DualMemoryKG
 
-Implementation repository for the paper:
+Implementation repo for:
 
-> **Matharaarachchi et al., 2026 — Knowledge-Based Systems**  
-> *Addressing Hallucinations in Generative AI Agents using Observability and Dual Memory Knowledge Graphs*  
-> https://www.sciencedirect.com/science/article/pii/S0950705126002121
+> **Matharaarachchi et al., 2026 - Knowledge-Based Systems**  
+> *Addressing Hallucinations in Generative AI Agents using Observability and Dual Memory Knowledge Graphs*
 
----
+Repo này hiện có 2 lớp:
 
-## Core Idea
+1. phần tái hiện pipeline gốc của bài báo
+2. phần mở rộng theo `proposal.md` để tiến tới paper mạnh hơn
 
-This framework reduces hallucinations in agentic LLM systems using:
+## Đọc tài liệu theo thứ tự
 
-1. **Observability logging** 
-2. **Diagnostics modules**
-   - Root Cause Analysis (RCA)
-   - Knowledge-Based Verification (KBV)
-   - Human-In-the-Loop review (HIL)
-3. **Dual Memory Knowledge Graph**
-   - Experience memory (successful traces)
-   - Insight memory (failure explanations)
-4. **Reasoning agents**
-   - ReAct
-   - Reflexion
+- [QUICK_RUN_PATH_VI.md](./QUICK_RUN_PATH_VI.md): lộ trình chạy thật ngắn nhất từ mini đến full
+- [RUN_MINI_FIRST_VI.md](./RUN_MINI_FIRST_VI.md): tài liệu từng bước một, ưu tiên thông luồng trên dữ liệu nhỏ trước
+- [REPRODUCTION_GUIDE_VI.md](./REPRODUCTION_GUIDE_VI.md): hướng dẫn đầy đủ từ cài đặt đến chạy toàn bộ repo
+- [CONTRIBUTIONS_AND_STATUS_VI.md](./CONTRIBUTIONS_AND_STATUS_VI.md): repo hiện đã đóng góp mới gì, phần nào đã implement, phần nào mới ở mức mở rộng hợp lý
+- [TROUBLESHOOTING_VI.md](./TROUBLESHOOTING_VI.md): lỗi thường gặp và cách xử lý
+- [RUN_ORDER.md](./RUN_ORDER.md): thứ tự lệnh ngắn gọn
+- [PAPER_EXPERIMENT_CHECKLIST.md](./PAPER_EXPERIMENT_CHECKLIST.md): checklist paper-facing
+- [scripts/README.md](./scripts/README.md): mô tả nhanh từng script
 
----
+## Mục tiêu của repo hiện tại
 
-## Repository Structure
+Repo hỗ trợ:
 
-```
+- ReAct baseline
+- Reflexion baseline
+- dual-memory knowledge graph với Neo4j
+- heuristic retrieval
+- vector-RAG baseline
+- graph-aware proxy baseline
+- ontology-only ablation
+- traversal-only ablation
+- learned mode
+- full mode
+- grounding metrics
+- stress tests
+- transfer summaries
+- result summary tables
+- local control panel để chạy các bước bằng giao diện web
 
-agents/               # ReAct + Reflexion agents (baseline + dual memory)
+## Cấu trúc chính
+
+```text
+agents/               # ReAct + Reflexion agents
 classifier/           # Intent / entity / attribute classification
+common/               # Shared config, Gemini models, logging
+data_pipeline/        # Build datasets for ontology / traversal training
 diagnostics/          # RCA, KBV, HIL
-eval/                 # Experimental evaluation
-knowledge_graph/      # Dual memory Neo4j KG
-log_transformation/   # LangSmith → ReAct trace pipeline
-scripts/              # End-to-end execution scripts
-common/               # Shared config, models, logging
+eval/                 # Evaluation and grounding metrics
+knowledge_graph/      # Neo4j graph schema, insert, retrieval
+log_transformation/   # Langfuse/export -> ReAct trace pipeline
+reasoning_ontology/   # Ontology dataset, encoder, prototype learner, inference
+scripts/              # All runnable entry points
+traversal_policy/     # Traversal dataset, training, inference
+```
 
-````
+## Quick start rất ngắn
 
----
+1. Tạo môi trường và cài package:
 
-# Setup Instructions
-
----
-## Requirements 
-
-* Python 3.10+ 
-* Neo4j (vector index support) 
-* LangSmith account 
-* Google Gemini API configured
-
-## Create virtual environment
-
-```bash
+```powershell
 python -m venv .venv
-```
-
-Activate it:
-
-```bash
-source .venv/bin/activate
-```
-
----
-
-## Install dependencies
-
-```bash
+.\.venv\Scripts\Activate.ps1
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
----
+2. Tạo `.env` từ `.env.example`
 
-## Configure environment variables
+3. Test LLM:
 
-Create a `.env` file following the `.env.example` file:
-
-```
-GOOGLE_API_KEY=...
-GEMINI_MODEL_NAME=gemini-2.5-flash
-GEMINI_EMBEDDING_MODEL=models/gemini-embedding-001
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=...
-NEO4J_DATABASE=neo4j
-LANGSMITH_PROJECT=...
-LANGSMITH_PROJECT_ID=...  # optional, preferred if available
-CONFIDENT_API_KEY=...     # optional until you run KBV / DeepEval
-```
----
-
-# Recommended Reproduction Path
-
-Start with cheap smoke tests before running the full pipeline:
-
-```bash
-python scripts/run_test_llm.py
-python scripts/run_prepare_mini_data.py --size 3
-python scripts/run_react_smoke.py --limit 1
-python scripts/run_reflexion_smoke.py --limit 1
+```powershell
+python .\scripts\run_test_llm.py
 ```
 
-Once those pass, continue with the full workflow below.
+4. Nếu muốn thao tác bằng giao diện thay vì gõ lệnh:
 
-# Full Pipeline Execution
-
-Below is the recommended **end-to-end workflow**.
-
----
-
-## Step 1 — Export LangSmith runs
-
-```bash
-python scripts/run_export.py
+```powershell
+python .\scripts\run_control_panel.py
 ```
 
-Output:
+Mở trình duyệt tại:
 
-```
-output/langsmith_runs_<...>.json
-```
-
----
-
-## Step 2 — Convert to ReAct trace format
-
-```bash
-python scripts/run_format_trace.py
+```text
+http://127.0.0.1:8787
 ```
 
-Output:
+Control panel hiện hỗ trợ:
 
-```
-output/langsmith_runs_<...>.react.txt
-```
+- queue nhiều job thay vì chạy từng lệnh riêng lẻ
+- task presets cho smoke, graph bootstrap, learned stack, ablation, stress, summary
+- live logs cho từng job
+- hủy job đang chạy hoặc còn nằm trong queue
+- chỉnh trực tiếp `.env` ngay trên UI
+- artifact browser + preview file/thư mục ngay trong UI
+- đọc nhanh CSV kết quả với metric cards và bảng preview
+- mở thư mục kết quả từ UI trên Windows
 
----
+5. Chạy smoke test giá rẻ:
 
-## Step 3 — Run Root Cause Analysis (RCA)
-
-```bash
-python scripts/run_rca.py
-```
-
-Output:
-
-```
-output/langsmith_runs_<...>.rca.json
-```
-
----
-
-## Step 4 — Run Knowledge-Based Verification (KBV)
-
-```bash
-python scripts/run_kbv.py
+```powershell
+python .\scripts\run_prepare_mini_data.py --size 3
+python .\scripts\run_react_smoke.py --limit 1
+python .\scripts\run_reflexion_smoke.py --limit 1
 ```
 
-Output:
+6. Nếu muốn tái hiện đầy đủ, chuyển sang [REPRODUCTION_GUIDE_VI.md](./REPRODUCTION_GUIDE_VI.md)
 
-```
-output/langsmith_runs_<...>.kbv.json
-```
+## Lưu ý quan trọng
 
----
-
-## Step 5 — Human Review (HIL)
-
-```bash
-python scripts/run_hil_streamlit.py
-```
-
-This launches the Streamlit interface for rating traces.
-
-Output:
-
-```
-output/langsmith_runs_<...>.hil.json
-```
-
----
-
-## Step 6 — Classify traces (intent, attributes, entities)
-
-```bash
-python scripts/run_classify.py
-```
-
-Outputs:
-
-```
-output/langsmith_runs_<...>.classified.json
-output/langsmith_runs_<...>.classified_insights.json
-```
-
----
-
-## Step 7 — Insert into Dual Memory Knowledge Graph
-
-Make sure Neo4j is running.
-
-```bash
-python scripts/run_insert_obs.py
-```
-
-This:
-
-* Creates vector index
-* Inserts embeddings
-* Stores experience + insight memory
-
----
-
-# Running Agents
-
-## ReAct Baseline / Dual Memory
-
-```bash
-python scripts/run_react_agent.py
-```
-
-## Reflexion Baseline / Dual Memory
-
-```bash
-python scripts/run_reflexion_agent.py
-```
-
----
-
-# 📊 Evaluation
-
-Evaluation compares:
-
-* ReAct
-* Reflexion
-* ReAct + Dual Memory
-* Reflexion + Dual Memory
-
-Metrics:
-
-* Exact match accuracy
-* Relevancy
-* Faithfulness
-* Consistency
-* Latency
-* Cost
-
-Results are written to CSV files in `eval/data` default.
-
----
-
-# 📄 Citation
-
-If you use this repository:
-
-```
-@article{matharaarachchi2026addressing,
-  title={Addressing Hallucinations in Generative AI Agents using Observability and Dual Memory Knowledge Graphs},
-  author={Matharaarachchi, Amali and Moraliyage, Harsha and Mills, Nishan and Gamage, Gihan and De Silva, Daswin and Manic, Milos},
-  journal={Knowledge-Based Systems},
-  pages={115469},
-  year={2026},
-  publisher={Elsevier}
-}
-```
-
+- Repo chấp nhận `GOOGLE_API_KEY` hoặc `GEMINI_API_KEY`
+- Nếu cả hai cùng có, code sẽ ưu tiên `GOOGLE_API_KEY`
+- `full` mode chỉ thực sự đúng nghĩa khi đã có file `traversal_policy.json`
+- Nếu dùng Gemini embeddings với Neo4j vector index, có thể để hệ thống tự probe dimension hoặc tự set `EMBEDDING_VECTOR_DIMENSIONS`
+- Phần mở rộng ontology/traversal đã được implement thêm, nhưng bạn nên đọc kỹ [CONTRIBUTIONS_AND_STATUS_VI.md](./CONTRIBUTIONS_AND_STATUS_VI.md) để tránh overclaim khi viết paper

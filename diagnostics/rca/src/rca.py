@@ -36,7 +36,7 @@ def rca_for_run(trace_text: str):
 def rca_for_all(traces: List[str],
     output_path: str | Path,) -> List[Dict[str, Any]]:
     """
-    Run RCA over all episodes in a LangSmith export.
+    Run RCA over all episodes in an exported observability payload.
 
     Returns list of:
         {

@@ -3,12 +3,15 @@ try:
     from langchain_classic.agents import initialize_agent, AgentType
 except ImportError:
     from langchain.agents import initialize_agent, AgentType
+from langchain_core.callbacks import CallbackManager
 from langchain_core.prompts import PromptTemplate
 from langchain_community.utilities import WikipediaAPIWrapper
 
 from common.models import get_llm
 from common.logger import get_logger
+from common.observability import build_callbacks
 from ..prompts.hotpot_prompts import react_prompt
+from .memory_prompt_formatter import format_memory_payload
 
 
 logger = get_logger(__name__)
@@ -25,26 +28,7 @@ tool_calls = []  # global list
 
 def format_examples(examples) -> str:
     """Normalize examples/memory payloads into a prompt-friendly string."""
-    if examples is None:
-        return ""
-    if isinstance(examples, str):
-        return examples
-    if isinstance(examples, dict):
-        sections = []
-        experiences = examples.get("experiences") or []
-        insights = examples.get("insights") or []
-        if experiences:
-            sections.append(
-                "Successful past traces:\n" + "\n\n".join(str(item).strip() for item in experiences if str(item).strip())
-            )
-        if insights:
-            sections.append(
-                "Failure insights:\n" + "\n".join(f"- {str(item).strip()}" for item in insights if str(item).strip())
-            )
-        return "\n\n".join(section for section in sections if section.strip())
-    if isinstance(examples, (list, tuple)):
-        return "\n\n".join(str(item).strip() for item in examples if str(item).strip())
-    return str(examples)
+    return format_memory_payload(examples)
 
 
 @tool("search_wikipedia", return_direct=False)
@@ -110,11 +94,14 @@ def creat_react_agent(prompt: str = react_prompt, llm=None):
         input_variables=["input", "examples"], 
         template=prompt
     )
+    callbacks = build_callbacks()
+    callback_manager = CallbackManager(handlers=callbacks) if callbacks else None
 
     agent = initialize_agent(
         tools=tools,
         llm=llm,
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        callback_manager=callback_manager,
         prompt=prompt_template,
         handle_parsing_errors=True,
         max_iterations=8,

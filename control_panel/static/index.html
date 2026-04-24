@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DualMemoryKG Control Room</title>
+    <link rel="stylesheet" href="/static/app.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="rail">
+        <div class="rail__brand">
+          <p class="eyebrow">DualMemoryKG</p>
+          <h1>Control Room</h1>
+          <p class="rail__blurb">
+            Operate the repo from one local surface: queue jobs, edit runtime config, and inspect
+            outputs.
+          </p>
+        </div>
+
+        <div class="status-ribbon" id="env-status"></div>
+        <nav class="group-nav" id="group-nav"></nav>
+      </aside>
+
+      <main class="workspace">
+        <section class="hero">
+          <div class="hero__copy">
+            <p class="eyebrow">Local orchestration</p>
+            <h2>Drive the research stack without living in the terminal.</h2>
+            <p>
+              Queue smoke checks, graph bootstrap, learned retrieval, ablations, and summaries from
+              one local control room built around your repo.
+            </p>
+          </div>
+          <div class="hero__pulse">
+            <div class="hero__ring"></div>
+            <div class="hero__ring hero__ring--inner"></div>
+            <div class="hero__core" id="active-job-indicator">Idle</div>
+          </div>
+        </section>
+
+        <section class="featured-strip" id="featured-strip"></section>
+
+        <section class="studio">
+          <div class="studio__list">
+            <div class="section-head">
+              <p class="eyebrow">Task Library</p>
+              <h3>Choose a workflow</h3>
+            </div>
+            <div id="task-list" class="task-list"></div>
+          </div>
+
+          <div class="studio__detail">
+            <div class="section-head">
+              <p class="eyebrow">Execution</p>
+              <h3 id="task-title">Select a task</h3>
+            </div>
+            <p id="task-summary" class="muted">
+              Pick any task on the left to reveal its parameters, outputs, and queue action.
+            </p>
+            <form id="task-form" class="task-form"></form>
+            <div class="detail-meta">
+              <div>
+                <p class="meta-label">Expected outputs</p>
+                <ul id="task-outputs" class="meta-list"></ul>
+              </div>
+              <div>
+                <p class="meta-label">Notes</p>
+                <p id="task-caution" class="muted">No caution notes for this task.</p>
+              </div>
+            </div>
+            <div class="action-row">
+              <button id="run-task-button" class="action-button" type="button" disabled>Queue task</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="console-grid">
+          <div class="console-grid__panel">
+            <div class="section-head">
+              <p class="eyebrow">Queue + logs</p>
+              <h3>Job stream</h3>
+            </div>
+            <div id="job-queue" class="job-queue"></div>
+            <div id="job-summary" class="job-summary muted">No job selected.</div>
+            <div class="action-row action-row--split">
+              <button id="cancel-job-button" class="ghost-button" type="button" disabled>Cancel selected job</button>
+            </div>
+            <pre id="log-console" class="log-console">Waiting for a task...</pre>
+          </div>
+
+          <div class="console-grid__panel">
+            <div class="section-head">
+              <p class="eyebrow">Artifacts</p>
+              <h3>Browser + preview</h3>
+            </div>
+            <div class="artifact-browser-toolbar">
+              <button id="artifact-up-button" class="ghost-button" type="button">Up</button>
+              <button id="artifact-open-folder" class="ghost-button" type="button" disabled>Open Folder</button>
+            </div>
+            <div id="artifact-current" class="artifact-current muted">Repository root</div>
+            <div id="artifacts" class="artifact-list"></div>
+            <div class="artifact-preview-head">
+              <strong id="artifact-preview-title">Preview</strong>
+              <a id="artifact-download" href="#" target="_blank" rel="noreferrer" class="download-link hidden">Download</a>
+            </div>
+            <pre id="artifact-preview" class="artifact-preview">Select a file or folder to preview it here.</pre>
+          </div>
+        </section>
+
+        <section class="ops-grid">
+          <div class="console-grid__panel">
+            <div class="section-head">
+              <p class="eyebrow">Runtime config</p>
+              <h3>.env editor</h3>
+            </div>
+            <p class="muted">
+              Edit common project settings locally. Values are written back to the repo `.env`
+              file.
+            </p>
+            <form id="env-form" class="env-form"></form>
+            <div class="action-row action-row--split">
+              <button id="reload-env-button" class="ghost-button" type="button">Reload .env</button>
+              <button id="save-env-button" class="action-button" type="button">Save .env</button>
+            </div>
+            <div id="env-save-status" class="muted">Environment config not loaded yet.</div>
+          </div>
+
+          <div class="console-grid__panel">
+            <div class="section-head">
+              <p class="eyebrow">Result dashboard</p>
+              <h3>CSV preview + quick metrics</h3>
+            </div>
+            <div id="result-summary" class="muted">
+              Select a CSV artifact to inspect rows and aggregate metrics here.
+            </div>
+            <div id="result-metrics" class="metric-grid"></div>
+            <div id="result-table-shell" class="result-table-shell">
+              <div class="muted">No CSV selected.</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

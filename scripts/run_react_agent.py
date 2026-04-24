@@ -4,7 +4,7 @@ import sys
 
 # Add parent directory to path so we can import common
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from common.config import DATA_PATH
+from common.config import DATA_PATH, RETRIEVAL_STRATEGY
 from eval.test.react_test import test, test_dual_memory, train
 from eval.test.load_data import load_hotpot_dataset
 
@@ -38,6 +38,7 @@ def main():
     test_dual_memory(
         data_path=os.path.join(DATA_PATH, "hard_bridge_500_validation.csv"),
         output_path=os.path.join(DATA_PATH, "react_dual_mem_results.csv"),
+        retrieval_strategy=RETRIEVAL_STRATEGY,
     )
 
 if __name__ == "__main__":

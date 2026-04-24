@@ -4,22 +4,22 @@ from pathlib import Path
 # Add parent directory to path so we can import common
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from common.config import LANGSMITH_PROJECT, LANGSMITH_PROJECT_ID, OUTPUT_PATH
+from common.config import LANGFUSE_ENVIRONMENT, LANGFUSE_TRACE_NAME, OUTPUT_PATH
 from log_transformation.src.log_extractor import export_runs
 from common.logger import get_logger
 logger = get_logger(__name__)
 
 
 def main():
-    logger.info("Starting LangSmith run export")
+    logger.info("Starting Langfuse trace export")
 
     try:
         export_runs(
-            project_id=LANGSMITH_PROJECT_ID,
-            project_name=LANGSMITH_PROJECT if not LANGSMITH_PROJECT_ID else None,
-            output_path=OUTPUT_PATH
+            output_path=OUTPUT_PATH,
+            trace_name=LANGFUSE_TRACE_NAME,
+            environment=LANGFUSE_ENVIRONMENT,
         )
-        logger.info("LangSmith export completed successfully")
+        logger.info("Langfuse export completed successfully")
 
     except Exception as e:
         logger.exception("Export failed: %s", str(e))

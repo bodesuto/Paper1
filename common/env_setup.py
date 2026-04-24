@@ -1,10 +1,28 @@
 import os
 from .config import (
     GOOGLE_API_KEY,
+    GEMINI_API_KEY,
+    LANGFUSE_HOST,
+    LANGFUSE_PUBLIC_KEY,
+    LANGFUSE_SECRET_KEY,
+    LANGFUSE_TRACING_ENABLED,
+    LANGFUSE_ENVIRONMENT,
+    LANGFUSE_RELEASE,
 )
 
 def apply_env():
     os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
     # Some Gemini SDKs still look for this alias.
-    os.environ.setdefault("GEMINI_API_KEY", GOOGLE_API_KEY)
+    os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
+    if LANGFUSE_HOST:
+        os.environ["LANGFUSE_HOST"] = LANGFUSE_HOST
+    if LANGFUSE_PUBLIC_KEY:
+        os.environ["LANGFUSE_PUBLIC_KEY"] = LANGFUSE_PUBLIC_KEY
+    if LANGFUSE_SECRET_KEY:
+        os.environ["LANGFUSE_SECRET_KEY"] = LANGFUSE_SECRET_KEY
+    os.environ["LANGFUSE_TRACING_ENABLED"] = "true" if LANGFUSE_TRACING_ENABLED else "false"
+    if LANGFUSE_ENVIRONMENT:
+        os.environ["LANGFUSE_ENVIRONMENT"] = LANGFUSE_ENVIRONMENT
+    if LANGFUSE_RELEASE:
+        os.environ["LANGFUSE_RELEASE"] = LANGFUSE_RELEASE
 

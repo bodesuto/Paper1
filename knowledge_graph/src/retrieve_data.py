@@ -1,80 +1,67 @@
-import time
-import sys
-from pathlib import Path
-
-# Add parent directory to path so we can import common
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from common.models import get_embeddings
 from common.logger import get_logger
-from classifier.src.classifier import classify_hotpot_vocab
 from agents.prompts.hotpot_examples import react_examples
-from knowledge_graph.cyphers.crud_cyphers import retrieve_cypher
+from knowledge_graph.src.retrieve_heuristic import (
+    bundle_to_prompt_payload,
+    retrieve_memories_graph_rag,
+    retrieve_memories_heuristic,
+    retrieve_memories_vector_rag,
+)
+from knowledge_graph.src.retrieve_learned import (
+    retrieve_memories_full as retrieve_memories_full_bundle,
+    retrieve_memories_learned as retrieve_memories_learned_bundle,
+    retrieve_memories_ontology_only as retrieve_memories_ontology_only_bundle,
+    retrieve_memories_traversal_only as retrieve_memories_traversal_only_bundle,
+)
+from knowledge_graph.src.retrieval_types import RetrievedMemoryBundle
+
 
 logger = get_logger(__name__)
 
 
-def retrieve_memories(query, session):
+def retrieve_memory_bundle(query: str, session, strategy: str = "heuristic") -> RetrievedMemoryBundle:
     """
-    Retrieve relevant memories/experiences from the knowledge graph based on a query.
-    
-    Args:
-        query: The input question/query string
-        id: Session or context ID
-        session: Neo4j session object for executing Cypher queries
-    
+    Retrieve a structured bundle of memories for downstream analysis/evaluation.
+
+    For now only the heuristic strategy is implemented. This wrapper exists so the
+    learned retrieval/traversal path can be added without changing agent runners.
+    """
+    if strategy == "ontology_only":
+        return retrieve_memories_ontology_only_bundle(query, session=session)
+    if strategy == "traversal_only":
+        return retrieve_memories_traversal_only_bundle(query, session=session)
+    if strategy == "vector_rag":
+        return retrieve_memories_vector_rag(query, session=session)
+    if strategy == "graph_rag":
+        return retrieve_memories_graph_rag(query, session=session)
+    if strategy == "learned":
+        return retrieve_memories_learned_bundle(query, session=session)
+    if strategy == "full":
+        return retrieve_memories_full_bundle(query, session=session)
+    if strategy != "heuristic":
+        logger.warning("Retrieval strategy '%s' is not implemented yet. Falling back to heuristic.", strategy)
+    return retrieve_memories_heuristic(query, session=session)
+
+
+def retrieve_memories(query, session, strategy: str = "heuristic"):
+    """
+    Backward-compatible prompt payload for existing ReAct/Reflexion code paths.
+
     Returns:
-        dict: {"experiences": [...], "insights": [...]} prompt memory payload
+        dict: {"experiences": [...], "insights": [...]}
     """
-    embeddings = get_embeddings()
-    
-    # Classify the query to extract intent, attributes, and entities
-    vocab = classify_hotpot_vocab(query)
-    logger.debug(f"Query vocab: {vocab}")
-    
-    # Embed the query
-    query_embed = embeddings.embed_query(query)
-    
-    # Prepare parameters for Cypher query
-    params = {
-        "query_embedding": query_embed,
-        "intent": vocab.get("intent"),
-        "attributes": vocab.get("attributes", []),
-        "entities": vocab.get("entities", [])
-    }
-    
-    # Execute the retrieval query
-    start = time.perf_counter()
-    result = session.run(retrieve_cypher, **params)
-    end = time.perf_counter()
-    logger.info(f"Cypher retrieval took: {end - start:.4f}s")
-    
-    experience_memories = []
-    insight_memories = []
+    bundle = retrieve_memory_bundle(query, session=session, strategy=strategy)
+    return bundle_to_prompt_payload(bundle, fallback_examples=react_examples)
 
-    for record in result:
-        node = record["node"]
-        labels = record["labels"]
-        if "Experience" in labels and node.get("trace"):
-            experience_memories.append(node.get("trace"))
-        elif "Insight" in labels:
-            insight = node.get("insights") or node.get("explanation") or node.get("root_cause")
-            if insight:
-                insight_memories.append(insight)
 
-    logger.info(
-        "Retrieved %d experiences and %d insights from knowledge graph",
-        len(experience_memories),
-        len(insight_memories),
-    )
+def retrieve_memories_learned(query: str, session) -> RetrievedMemoryBundle:
+    """
+    Placeholder for the future learned ontology/traversal retrieval path.
+    """
+    return retrieve_memories_learned_bundle(query, session=session)
 
-    # Pad successful traces with hand-written examples if we have too few.
-    if len(experience_memories) < 3:
-        padding_count = 3 - len(experience_memories)
-        experience_memories.extend(react_examples[:padding_count])
-        logger.info("Padded with %d default examples", padding_count)
 
-    return {
-        "experiences": experience_memories[:3],
-        "insights": insight_memories[:3],
-    }
+__all__ = [
+    "retrieve_memories",
+    "retrieve_memory_bundle",
+    "retrieve_memories_learned",
+]

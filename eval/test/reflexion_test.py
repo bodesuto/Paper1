@@ -1,13 +1,16 @@
 from pathlib import Path
+import json
 
 import time
 
 import pandas as pd
 from agents.src.reflexion import reflexion_agent_run
 from agents.src.react import creat_react_agent, tool_calls
+from common.config import RETRIEVAL_STRATEGY
 from common.env_setup import apply_env
 from common.models import get_llm_with_trace
 from agents.prompts.hotpot_examples import react_examples
+from eval.test.grounding_metrics import summarize_grounding_metrics
 from eval.test.matrics import (
     build_test_case,
     safe_measure,
@@ -23,7 +26,8 @@ from eval.test.matrics import (
 
 from eval.test.react_test import get_database_session
 from eval.test.utils import FullReActTrace, get_usage_callback
-from knowledge_graph.src.retrieve_data import retrieve_memories
+from knowledge_graph.src.retrieve_data import retrieve_memory_bundle
+from knowledge_graph.src.retrieve_heuristic import bundle_to_prompt_payload
 
 def train(data_path: str | Path):
     apply_env()
@@ -34,7 +38,7 @@ def train(data_path: str | Path):
         question = row["question"]
         expected = row.get("answer")
         try:
-            actual = reflexion_agent_run(question, examples=react_examples)
+            actual, _ = reflexion_agent_run(question, examples=react_examples)
         except Exception as e:
             actual = f"ERROR: {e}"
         print(f"Question: {question} | Expected: {expected} | Actual: {actual}")
@@ -53,7 +57,7 @@ def test(data_path: str | Path, output_path: str | Path):
     exact_match_success = 0
     SAVE_PATH = Path(output_path)
     
-    for i, row in df_bridge[:2].iterrows():
+    for i, row in df_bridge.iterrows():
         tool_calls.clear()
         expected_output = row["answer"]
         question = row["question"]
@@ -97,7 +101,8 @@ def test(data_path: str | Path, output_path: str | Path):
                 "gold_answer": expected_output,
                 "actual_answer": actual_answer,
                 "exact_match": is_exact,
-                "exact_match_eval": exact_match_score.success,
+                "exact_match_eval": exact_match_score.score,
+                "exact_match_eval_success": exact_match_score.success,
                 "exact_match_reason": exact_match_score.reason,
                 "bad_calls": len(bad_calls),
                 "total_calls": len(tool_calls),
@@ -132,7 +137,13 @@ def test(data_path: str | Path, output_path: str | Path):
     print("Exact Match (evaluated):", exact_match_success)
     print(f"Saved CSV: {SAVE_PATH}")
 
-def test_dual_memory(data_path: str | Path, output_path: str | Path):
+def test_dual_memory(
+    data_path: str | Path,
+    output_path: str | Path,
+    retrieval_strategy: str = RETRIEVAL_STRATEGY,
+    memory_transform=None,
+    row_limit: int | None = None,
+):
     """Test reflexion agent with dual memory (reflexion + knowledge graph experiences)."""
     apply_env()
     df_bridge = pd.read_csv(data_path)
@@ -148,7 +159,8 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
     llm = get_llm_with_trace(trace_handler)
     agent = creat_react_agent(llm=llm)
     with get_database_session() as session:
-        for i, row in df_bridge.iterrows():
+        iterator = df_bridge.iterrows() if row_limit is None else df_bridge.head(row_limit).iterrows()
+        for i, row in iterator:
             # Clear global tool_calls before each run
             tool_calls.clear()
             expected_output = row["answer"]
@@ -156,8 +168,13 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
             
             # Retrieve experiences from knowledge graph
             mem_start = time.perf_counter()
-            experience_examples = retrieve_memories(question, session=session)
+            memory_bundle = retrieve_memory_bundle(question, session=session, strategy=retrieval_strategy)
+            experience_examples = bundle_to_prompt_payload(memory_bundle, fallback_examples=react_examples)
+            if memory_transform is not None:
+                experience_examples = memory_transform(experience_examples, row=row.to_dict())
             mem_end = time.perf_counter()
+            selected_path = memory_bundle.selected_path_summary()
+            candidate_path = memory_bundle.path_summary()
             
             with get_usage_callback() as cb:
                 agent_start = time.perf_counter()
@@ -188,6 +205,9 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
                     actual_answer=actual_answer,
                     tool_calls=tool_calls,
                     trace_text=trace_text,
+                    retrieval_path=selected_path,
+                    memory_payload=experience_examples,
+                    retrieval_strategy=memory_bundle.strategy,
                 )
 
                 # Evaluate exact match using DeepEval
@@ -200,6 +220,13 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
                 instruction_inconsistency_score = safe_measure(build_instruction_inconsistency_metric, test_case)
                 context_inconsistency_score = safe_measure(build_context_inconsistency_metric, test_case)
                 logical_inconsistency_score = safe_measure(build_logical_inconsistency_metric, test_case)
+                grounding_scores = summarize_grounding_metrics(
+                    question=question,
+                    answer=actual_answer,
+                    retrieval_path=selected_path,
+                    memory_payload=experience_examples,
+                    tool_calls=tool_calls,
+                )
 
                 results.append({
                     "index": row.get("id", i),
@@ -208,12 +235,22 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
                     "actual_answer": actual_answer,
                     "exact_match": is_exact,
                     "exact_match_eval": exact_match_score.score,
+                    "exact_match_eval_success": exact_match_score.success,
                     "bad_calls": len(bad_calls),
                     "total_calls": len(tool_calls),
                     # Latencies
                     "memory_latency_s": mem_end - mem_start,
                     "agent_latency_s": agent_end - agent_start,
                     "total_latency_s": (mem_end - mem_start) + (agent_end - agent_start),
+                    "retrieval_strategy": memory_bundle.strategy,
+                    "retrieved_node_ids": json.dumps(memory_bundle.selected_node_ids(), ensure_ascii=False),
+                    "retrieved_memory_types": json.dumps(memory_bundle.selected_memory_types(), ensure_ascii=False),
+                    "retrieval_path": json.dumps(selected_path, ensure_ascii=False),
+                    "candidate_node_ids": json.dumps([node.node_id for node in memory_bundle.nodes if node.node_id], ensure_ascii=False),
+                    "candidate_memory_types": json.dumps(memory_bundle.memory_types(), ensure_ascii=False),
+                    "candidate_retrieval_path": json.dumps(candidate_path, ensure_ascii=False),
+                    "memory_payload": json.dumps(experience_examples, ensure_ascii=False),
+                    "traversal": json.dumps(memory_bundle.metadata.get("traversal", {}), ensure_ascii=False),
                     # Token usage
                     "prompt_tokens": cb.prompt_tokens,
                     "completion_tokens": cb.completion_tokens,
@@ -234,6 +271,11 @@ def test_dual_memory(data_path: str | Path, output_path: str | Path):
                     "context_inconsistency_reason": context_inconsistency_score.reason,
                     "logical_inconsistency_score": logical_inconsistency_score.score,
                     "logical_inconsistency_reason": logical_inconsistency_score.reason,
+                    "lexical_support_ratio": grounding_scores["lexical_support_ratio"],
+                    "unsupported_reasoning_score": grounding_scores["unsupported_reasoning_score"],
+                    "path_grounding_precision": grounding_scores["path_grounding_precision"],
+                    "memory_selection_accuracy": grounding_scores["memory_selection_accuracy"],
+                    "evidence_sufficiency_rate": grounding_scores["evidence_sufficiency_rate"],
                 })
                 df_results = pd.DataFrame(results)
                 df_results.to_csv(SAVE_PATH, index=False)

@@ -10,6 +10,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from common.config import DATA_PATH
 from common.logger import get_logger
+from eval.test.load_data import load_hotpot_dataset
 
 
 logger = get_logger(__name__)
@@ -21,8 +22,17 @@ def build_mini_split(split: str, size: int) -> Path:
     target = data_dir / f"mini_{split}_{size}.csv"
 
     if not source.exists():
-        raise FileNotFoundError(
-            f"Missing source dataset: {source}. Run the full dataset download first."
+        logger.info(
+            "Source dataset missing at %s. Downloading HotpotQA %s split first.",
+            source,
+            split,
+        )
+        load_hotpot_dataset(
+            split=split,
+            question_type="bridge",
+            level="hard",
+            size=500,
+            output_path=str(source),
         )
 
     df = pd.read_csv(source).head(size)

@@ -1,10 +1,10 @@
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 
-from langsmith import Client
 from common.logger import get_logger
+from common.observability import get_langfuse_client, langfuse_is_enabled
 
 logger = get_logger(__name__)
 
@@ -20,77 +20,143 @@ def safe_json(obj):
     return str(obj)
 
 
-def run_to_dict(run):
-    """Flatten LangSmith Run into a JSON-safe dictionary (recursive for child runs)."""
+def _stringify_io(value):
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    try:
+        return json.dumps(value, ensure_ascii=False)
+    except Exception:
+        return str(value)
+
+
+def _normalize_run_type(observation) -> tuple[str, str, dict[str, str]]:
+    obs_type = str(getattr(observation, "type", "") or "").lower()
+    name = getattr(observation, "name", None) or "observation"
+    output_text = _stringify_io(getattr(observation, "output", None))
+
+    if obs_type == "generation":
+        return "chain", "LLMChain", {"text": output_text}
+
+    if obs_type in {"tool", "retriever"}:
+        return "tool", name, {"output": output_text}
+
+    if any(label in output_text for label in ("Thought:", "Action:", "Final Answer:")):
+        return "chain", "LLMChain", {"text": output_text}
+
+    return "tool", name, {"output": output_text}
+
+
+def _observation_to_run_dict(observation):
+    run_type, name, outputs = _normalize_run_type(observation)
+    status_message = getattr(observation, "status_message", None)
+    level = str(getattr(observation, "level", "") or "").upper()
     return {
-        "id": str(run.id),
-        "parent_run_id": str(run.parent_run_id) if run.parent_run_id else None,
-        "name": run.name,
-        "type": run.run_type,
-        "run_type": run.run_type,
-        "inputs": run.inputs,
-        "outputs": run.outputs,
-        "error": run.error,
-        "status": run.status,
-        "start_time": run.start_time.isoformat() if run.start_time else None,
-        "end_time": run.end_time.isoformat() if run.end_time else None,
-        "child_runs": [run_to_dict(c) for c in getattr(run, "child_runs", []) or []],
+        "id": str(getattr(observation, "id", "")),
+        "parent_run_id": str(getattr(observation, "parent_observation_id", "") or "") or None,
+        "name": name,
+        "type": run_type,
+        "run_type": run_type,
+        "inputs": {"input": _stringify_io(getattr(observation, "input", None))},
+        "outputs": outputs,
+        "error": status_message if level == "ERROR" else None,
+        "status": "error" if level == "ERROR" else "success",
+        "start_time": observation.start_time.isoformat() if getattr(observation, "start_time", None) else None,
+        "end_time": observation.end_time.isoformat() if getattr(observation, "end_time", None) else None,
+        "child_runs": [],
+    }
+
+
+def _sort_child_runs(run: dict) -> None:
+    run["child_runs"].sort(key=lambda item: item.get("start_time") or "")
+    for child in run["child_runs"]:
+        _sort_child_runs(child)
+
+
+def _build_child_run_tree(observations) -> list[dict]:
+    included = [_observation_to_run_dict(observation) for observation in observations or []]
+    run_map = {run["id"]: run for run in included if run.get("id")}
+    root_runs: list[dict] = []
+
+    for run in included:
+        parent_run_id = run.get("parent_run_id")
+        if parent_run_id and parent_run_id in run_map:
+            run_map[parent_run_id]["child_runs"].append(run)
+        else:
+            root_runs.append(run)
+
+    root_runs.sort(key=lambda item: item.get("start_time") or "")
+    for root in root_runs:
+        _sort_child_runs(root)
+    return root_runs
+
+
+def trace_to_dict(trace):
+    observations = getattr(trace, "observations", []) or []
+    return {
+        "id": str(trace.id),
+        "parent_run_id": None,
+        "name": trace.name or "LangfuseTrace",
+        "type": "chain",
+        "run_type": "chain",
+        "inputs": {"input": _stringify_io(getattr(trace, "input", None))},
+        "outputs": {"output": _stringify_io(getattr(trace, "output", None))},
+        "error": None,
+        "status": "success",
+        "start_time": trace.timestamp.isoformat() if getattr(trace, "timestamp", None) else None,
+        "end_time": None,
+        "child_runs": _build_child_run_tree(observations),
+        "tags": list(getattr(trace, "tags", []) or []),
+        "metadata": getattr(trace, "metadata", None),
+        "environment": getattr(trace, "environment", None),
     }
 
 
 def export_runs(
-    project_id: str | None,
-    project_name: str | None,
+    *,
     output_path: str,
-    include_stats: bool = False,
-    include_total_stats: bool = False,
+    trace_name: str | None = None,
+    environment: str | None = None,
+    limit: int = 100,
 ):
-   
-    client = Client()
-    if project_id:
-        logger.info("Fetching runs for project_id=%s", project_id)
-        runs = client.list_runs(project_id=project_id)
-    elif project_name:
-        logger.info("Fetching runs for project_name=%s", project_name)
-        runs = client.list_runs(project_name=project_name)
-    else:
-        raise ValueError("Either project_id or project_name must be provided.")
+    if not langfuse_is_enabled():
+        raise ValueError(
+            "Langfuse export requires LANGFUSE_TRACING_ENABLED=true plus LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_HOST."
+        )
 
-    parent_run_ids = []
-    for r in runs:
-        if r.parent_run_id is None:
-            parent_run_ids.append(r.id)
-    logger.info("Found %d parent runs", len(parent_run_ids))
+    client = get_langfuse_client()
+    if client is None:
+        raise RuntimeError("Langfuse client is not available.")
 
+    logger.info("Fetching traces from Langfuse host=%s", getattr(client, "base_url", None) or getattr(client, "host", None) or "configured-host")
     episodes = []
-    for rid in parent_run_ids:
-        logger.debug("Reading run_id=%s", rid)
-        run = client.read_run(run_id=rid, load_child_runs=True)
+    page = 1
+    total_pages = 1
 
-        ep = run_to_dict(run)
+    while page <= total_pages:
+        trace_page = client.api.trace.list(
+            page=page,
+            limit=limit,
+            name=trace_name,
+            environment=environment,
+            fields="core,io",
+            order_by="timestamp.desc",
+        )
+        total_pages = trace_page.meta.total_pages or 1
+        logger.info("Fetched Langfuse trace page %d/%d (%d items)", page, total_pages, len(trace_page.data))
 
-        if include_stats:
-            try:
-                ep["stats"] = client.get_run_stats(id=[rid])
-            except Exception as e:
-                logger.warning("Failed to fetch stats for run_id=%s: %s", rid, e)
-                ep["stats_error"] = str(e)
+        for trace_stub in trace_page.data:
+            trace = client.api.trace.get(trace_stub.id, fields="core,io,observations")
+            episodes.append(trace_to_dict(trace))
 
-        episodes.append(ep)
+        page += 1
 
     payload = {"episodes": episodes}
-
-    if include_total_stats:
-        try:
-            payload["total_stats"] = client.get_run_stats(id=parent_run_ids)
-        except Exception as e:
-            logger.warning("Failed to fetch total_stats: %s", e)
-            payload["total_stats_error"] = str(e)
-
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    logger.info("Saving export to %s", output_path)
+    logger.info("Saving Langfuse export to %s", output_path)
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, default=safe_json)
+    with open(output_path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, default=safe_json)
 
-    logger.info("Export complete. Saved %d episodes.", len(episodes))
+    logger.info("Langfuse export complete. Saved %d episodes.", len(episodes))

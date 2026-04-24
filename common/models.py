@@ -10,10 +10,16 @@ except ImportError:
 
 from .config import GEMINI_MODEL_NAME, GEMINI_EMBEDDING_MODEL
 from .env_setup import apply_env
+from .observability import build_callbacks
 
 def get_llm():
     apply_env()
-    return ChatGoogleGenerativeAI(model=GEMINI_MODEL_NAME, temperature=0)
+    callbacks = build_callbacks()
+    return ChatGoogleGenerativeAI(
+        model=GEMINI_MODEL_NAME,
+        temperature=0,
+        callbacks=callbacks or None,
+    )
 
 
 def get_llm_with_trace(trace_handler: BaseCallbackHandler):
@@ -22,11 +28,12 @@ def get_llm_with_trace(trace_handler: BaseCallbackHandler):
     Returns tuple of (llm, trace_handler).
     """
     apply_env()
+    callbacks = build_callbacks(trace_handler)
 
     llm = ChatGoogleGenerativeAI(
         model=GEMINI_MODEL_NAME,
         temperature=0,
-        callbacks=[trace_handler],
+        callbacks=callbacks or None,
     )
 
     return llm

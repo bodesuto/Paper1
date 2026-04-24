@@ -59,7 +59,7 @@ def summarize_observation(obs):
 # ========== MAIN EXTRACTION ==========
 
 def extract_reasoning_trace(run):
-    """Extract ReAct reasoning chain from LangSmith run."""
+    """Extract a ReAct reasoning chain from an exported observability trace."""
 
     # Sort chronologically
     child_runs = sorted(run.get("child_runs", []),

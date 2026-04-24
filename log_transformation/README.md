@@ -1,29 +1,25 @@
-# Log Transformation Module (LangSmith → ReAct Trace)
+# Log Transformation Module (Langfuse -> ReAct Trace)
 
-This module converts **LangSmith project runs** into:
-1) a **portable JSON export** of full run trees, and  
-2) a **normalized ReAct-style text trace** (`Question / Thought / Action / Observation / Final Answer`) for downstream evaluation (KBV), diagnosis (RCA), and human review (HIL).
+This module converts Langfuse traces into:
+1. a portable JSON export of full trace trees, and
+2. a normalized ReAct-style text trace for downstream RCA, KBV, and human review.
 
-This module corresponds to the **Observability logging and graph-Based memory construction** section.
----
+The downstream pipeline shape is intentionally kept stable through the `episodes` JSON format so the rest of the repo can keep working after the migration away from the legacy tracing backend.
 
 ## Files
 
-```
+```text
 log_transformation/
-└── src/
-    ├── log_extractor.py   # LangSmith export → JSON
-    └── log_formatter.py   # JSON export → ReAct trace TXT
+`-- src/
+    |-- log_extractor.py   # Langfuse export -> JSON
+    `-- log_formatter.py   # JSON export -> ReAct trace TXT
 ```
----
 
-## 1) log_extractor.py
+## 1. Export traces
 
-Exports LangSmith project runs into a portable JSON file.
+`log_extractor.export_runs(project_id, output_path, include_stats=False, include_total_stats=False)`
 
-export_runs(project_id, output_path, include_stats=False, include_total_stats=False)
-
-Creates:
+This function now reads traces from Langfuse using the configured SDK client and writes:
 
 ```json
 {
@@ -31,121 +27,91 @@ Creates:
 }
 ```
 
-Usage:
+Example:
 
 ```python
 from log_transformation.src.log_extractor import export_runs
 
 export_runs(
-    project_id="YOUR_LANGSMITH_PROJECT_ID",
-    output_path="output/langsmith_export.json",
+    project_id="paper1",
+    output_path="output/langfuse_export.json",
     include_stats=False,
     include_total_stats=False,
 )
 ```
 
----
+Required environment variables:
 
-## 2) `src/log_formatter.py` — Convert JSON export to ReAct trace TXT
+- `LANGFUSE_HOST`
+- `LANGFUSE_PUBLIC_KEY`
+- `LANGFUSE_SECRET_KEY`
 
-* Loads the JSON export (`payload["episodes"]`)
-* Traverses each episode’s `child_runs` chronologically
-* Extracts:
-  * **LLMChain text** → Thought/Action/Observation/Final Answer blocks
-  * **Tool outputs** → Observation blocks
-* Produces a normalized trace like:
+Optional:
 
-```
-Question: ...
-Thought: ...
-Action: ...
-Action Input: ...
-Observation: ...
-Final Answer: ...
-```
+- `LANGFUSE_TRACING_ENABLED`
+- `LANGFUSE_ENVIRONMENT`
+- `LANGFUSE_RELEASE`
+- `LANGFUSE_TRACE_NAME`
 
-* Writes multiple traces into a single `.txt` file, separated by: ======
+## 2. Convert JSON export to ReAct trace text
 
-Usage:
+`log_formatter.write_react_traces(in_json_path, out_txt_path)`
+
+It:
+
+- loads `payload["episodes"]`
+- traverses each episode's `child_runs` chronologically
+- extracts thought/action/observation/final answer blocks
+- writes a normalized ReAct-style text file
+
+Example:
 
 ```python
 from log_transformation.src.log_formatter import write_react_traces
 
 write_react_traces(
-    in_json_path="output/langsmith_export.json",
-    out_txt_path="output/react_traces.txt",
+    in_json_path="output/langfuse_export.json",
+    out_txt_path="output/langfuse_export.react.txt",
 )
 ```
 
----
-
 ## Output formats
 
-### JSON export
+JSON export:
 
-`output/langsmith_export.json`
+`output/langfuse_export.json`
 
-```json
-{
-  "episodes": [
-    {
-      "id": "...",
-      "run_type": "chain",
-      "inputs": {...},
-      "outputs": {...},
-      "child_runs": [...]
-    }
-  ]
-}
-```
+ReAct trace text:
 
-### ReAct trace text
+`output/langfuse_export.react.txt`
 
-`output/react_traces.txt`
+## Pipeline integration
 
-```
-Question: ...
-Thought: ...
-Action: ...
-Observation: ...
-Final Answer: ...
-
-================================================================================
-
-Question: ...
-...
-```
-
----
-
-## How this integrates with the rest of the repo
-
-1. **Extract LangSmith runs**
-   * `log_extractor.export_runs()` → `langsmith_export.json`
-2. **Format to ReAct traces**
-   * `log_formatter.write_react_traces()` → `react_traces.txt`
-3. **Downstream**
-   * KBV metrics (automated scoring)
-   * RCA (failure diagnosis)
-   * HIL (human review UI)
-
----
+1. Export Langfuse traces with `run_export.py`
+2. Format them with `run_format_trace.py`
+3. Run downstream diagnosis and review:
+   - RCA
+   - KBV
+   - HIL
+   - classification
+   - graph insertion
 
 ## Troubleshooting
 
-### Empty export / missing runs
+### Empty export or missing traces
 
-* Confirm `project_id` is correct
-* Confirm LangSmith credentials are configured in your environment
-* Ensure your runs are actually in that project
+- Check `project_id`
+- Check `LANGFUSE_HOST`
+- Check `LANGFUSE_PUBLIC_KEY`
+- Check `LANGFUSE_SECRET_KEY`
+- Confirm traces were actually written to that Langfuse project
 
 ### Trace missing observations
 
-* Tool output may not be present in `run["outputs"]["output"]` depending on tool logging
-* Some runs may not use `type == "tool"` vs `run_type == "tool"` (compat layer can be added)
+- Tool output may be absent or logged under a different observation shape
+- Some agent/tool spans may not populate a final text output field
 
-### Trace lacks `Final Answer`
+### No final answer block
 
-* Some agents may end without an explicit final marker.
-* Downstream modules should handle fallback extraction (e.g., last action input).
-
+- Some runs do not emit an explicit final marker
+- Downstream code should fall back to the last available answer-like output
