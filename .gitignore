@@ -65,6 +65,7 @@ eval/data/*_smoke_results.csv
 .env.test
 .env.production
 *.env*
+*.env.example*
 
 # Python
 __pycache__/
