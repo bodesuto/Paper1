@@ -13,8 +13,10 @@ METRIC_LABELS = {
     "exact_match_eval": "Exact Match",
     "faithfulness_score": "Faithfulness",
     "path_grounding_precision": "Path Grounding",
-    "unsupported_reasoning_score": "Unsupported",
     "evidence_f1": "Evidence F1",
+    "support_set_best_f1": "Support-Set F1",
+    "contradiction_exposure_rate": "Contradiction Exposure",
+    "unsupported_reasoning_score": "Unsupported",
     "total_latency_s": "Latency (s)",
 }
 
@@ -40,7 +42,11 @@ def _load_summary(summary_csv: str | Path) -> pd.DataFrame:
 
 def plot_main_metrics(summary_csv: str | Path, output_path: str | Path) -> Path:
     df = _load_summary(summary_csv)
-    metrics = ["exact_match_eval", "faithfulness_score", "path_grounding_precision"]
+    metrics = [
+        metric
+        for metric in ("exact_match_eval", "faithfulness_score", "path_grounding_precision", "evidence_f1", "support_set_best_f1")
+        if metric in df.columns and df[metric].notna().any()
+    ]
     plot_rows: list[dict[str, Any]] = []
     for _, row in df.iterrows():
         for metric in metrics:
@@ -90,7 +96,19 @@ def plot_grounding_latency_tradeoff(summary_csv: str | Path, output_path: str | 
 
 def plot_ablation_heatmap(summary_csv: str | Path, output_path: str | Path) -> Path:
     df = _load_summary(summary_csv)
-    heatmap_cols = ["exact_match_eval", "faithfulness_score", "path_grounding_precision", "unsupported_reasoning_score"]
+    heatmap_cols = [
+        metric
+        for metric in (
+            "exact_match_eval",
+            "faithfulness_score",
+            "path_grounding_precision",
+            "evidence_f1",
+            "support_set_best_f1",
+            "contradiction_exposure_rate",
+            "unsupported_reasoning_score",
+        )
+        if metric in df.columns and df[metric].notna().any()
+    ]
     pivot = df.set_index("method")[heatmap_cols].rename(columns=METRIC_LABELS)
 
     output_path = Path(output_path)
@@ -150,6 +168,73 @@ def plot_selector_objective_terms(results_csv: str | Path, output_path: str | Pa
     plt.xticks(rotation=20, ha="right")
     plt.ylabel("Average Contribution")
     plt.title("Average Evidence Selector Objective Terms")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=220)
+    plt.close()
+    return output_path
+
+
+def plot_grounding_validation(summary_csv: str | Path, output_path: str | Path) -> Path | None:
+    df = _load_summary(summary_csv)
+    metrics = [
+        metric
+        for metric in ("evidence_f1", "support_set_best_f1", "path_grounding_precision", "unsupported_reasoning_score", "contradiction_exposure_rate")
+        if metric in df.columns and df[metric].notna().any()
+    ]
+    if not metrics:
+        return None
+
+    plot_rows: list[dict[str, Any]] = []
+    for _, row in df.iterrows():
+        for metric in metrics:
+            value = row.get(metric)
+            if pd.notna(value):
+                plot_rows.append({"method": row["method"], "metric": METRIC_LABELS.get(metric, metric), "value": float(value)})
+    plot_df = pd.DataFrame(plot_rows)
+    if plot_df.empty:
+        return None
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.figure(figsize=(10, 5))
+    sns.barplot(data=plot_df, x="method", y="value", hue="metric", palette="colorblind")
+    plt.xticks(rotation=25, ha="right")
+    plt.ylabel("Score")
+    plt.xlabel("")
+    plt.title("Grounding Validation Metrics")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=220)
+    plt.close()
+    return output_path
+
+
+def plot_error_decomposition(error_breakdown_csv: str | Path, output_path: str | Path) -> Path | None:
+    df = pd.read_csv(error_breakdown_csv)
+    if "failure_modes" not in df.columns or df.empty:
+        return None
+
+    counts: dict[str, int] = {}
+    for failure_modes in df["failure_modes"]:
+        for mode in str(failure_modes).split("|"):
+            normalized = mode.strip()
+            if not normalized:
+                continue
+            counts[normalized] = counts.get(normalized, 0) + 1
+    if not counts:
+        return None
+
+    plot_df = pd.DataFrame(
+        [{"failure_mode": key, "count": value} for key, value in sorted(counts.items(), key=lambda item: item[1], reverse=True)]
+    )
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.figure(figsize=(10, 5))
+    sns.barplot(data=plot_df, x="failure_mode", y="count", palette="crest")
+    plt.xticks(rotation=28, ha="right")
+    plt.ylabel("Row Count")
+    plt.xlabel("")
+    plt.title("Error Decomposition")
     plt.tight_layout()
     plt.savefig(output_path, dpi=220)
     plt.close()

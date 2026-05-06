@@ -17,6 +17,7 @@ def run_theorem_aligned_suite(
     output_dir: str,
     annotations_path: str | None = None,
     bootstrap_samples: int = 1000,
+    allow_train_eval: bool = False,
 ) -> None:
     repo_root = Path(repo_root)
     output_dir = Path(output_dir)
@@ -28,11 +29,17 @@ def run_theorem_aligned_suite(
     summary_csv = output_dir / f"{agent}_theorem_summary.csv"
     transfer_csv = output_dir / f"{agent}_transfer_summary.csv"
     stress_csv = output_dir / f"{agent}_stress_noisy.csv"
+    architecture_report_json = output_dir / f"{agent}_architecture_validity.json"
+    architecture_error_csv = output_dir / f"{agent}_architecture_error_breakdown.csv"
     figures_dir = output_dir / "figures"
     baseline_csv = ablation_dir / f"{agent}_baseline.csv"
     full_csv = ablation_dir / f"{agent}_full.csv"
+    evidence_inputs: list[str] = []
 
-    _run([python, "scripts/run_ablation_suite.py", "--agent", agent, "--data-path", data_path, "--output-dir", str(ablation_dir)], repo_root)
+    ablation_command = [python, "scripts/run_ablation_suite.py", "--agent", agent, "--data-path", data_path, "--output-dir", str(ablation_dir)]
+    if allow_train_eval:
+        ablation_command.append("--allow-train-eval")
+    _run(ablation_command, repo_root)
     _run(
         [
             python,
@@ -47,6 +54,7 @@ def run_theorem_aligned_suite(
             data_path,
             "--output-path",
             str(stress_csv),
+            *(["--allow-train-eval"] if allow_train_eval else []),
         ],
         repo_root,
     )
@@ -75,43 +83,65 @@ def run_theorem_aligned_suite(
     ]
     if full_csv.exists():
         inputs.append(str(full_csv))
+
+    if annotations_path:
+        for input_csv in inputs:
+            input_path = Path(input_csv)
+            evidence_eval_csv = output_dir / f"{input_path.stem}.annotated_evidence_eval.csv"
+            evidence_eval_summary = output_dir / f"{input_path.stem}.annotated_evidence_summary.json"
+            _run(
+                [
+                    python,
+                    "scripts/run_annotated_evidence_eval.py",
+                    "--results-csv",
+                    str(input_path),
+                    "--annotations-path",
+                    annotations_path,
+                    "--output-path",
+                    str(evidence_eval_csv),
+                    "--summary-path",
+                    str(evidence_eval_summary),
+                ],
+                repo_root,
+            )
+            evidence_inputs.append(str(evidence_eval_csv))
+
+    summary_command = [
+        python,
+        "scripts/run_result_summary.py",
+        "--inputs",
+        *inputs,
+        "--reference",
+        str(baseline_csv),
+        "--bootstrap-samples",
+        str(bootstrap_samples),
+        "--output-path",
+        str(summary_csv),
+    ]
+    if evidence_inputs:
+        summary_command.extend(["--evidence-inputs", *evidence_inputs])
+    _run(summary_command, repo_root)
+
     _run(
         [
             python,
-            "scripts/run_result_summary.py",
-            "--inputs",
-            *inputs,
-            "--reference",
-            str(baseline_csv),
-            "--bootstrap-samples",
-            str(bootstrap_samples),
-            "--output-path",
+            "scripts/run_architecture_validity.py",
+            "--summary-csv",
             str(summary_csv),
+            "--results-csv",
+            str(full_csv if full_csv.exists() else baseline_csv),
+            "--output-path",
+            str(architecture_report_json),
+            "--error-output-path",
+            str(architecture_error_csv),
         ],
         repo_root,
     )
 
-    if annotations_path:
-        evidence_eval_csv = output_dir / f"{agent}_annotated_evidence_eval.csv"
-        evidence_eval_summary = output_dir / f"{agent}_annotated_evidence_summary.json"
-        target_csv = full_csv if full_csv.exists() else baseline_csv
-        _run(
-            [
-                python,
-                "scripts/run_annotated_evidence_eval.py",
-                "--results-csv",
-                str(target_csv),
-                "--annotations-path",
-                annotations_path,
-                "--output-path",
-                str(evidence_eval_csv),
-                "--summary-path",
-                str(evidence_eval_summary),
-            ],
-            repo_root,
-        )
-
     figure_results_csv = full_csv if full_csv.exists() else baseline_csv
+    figure_evidence_csv = None
+    if annotations_path and figure_results_csv:
+        figure_evidence_csv = output_dir / f"{Path(figure_results_csv).stem}.annotated_evidence_eval.csv"
     _run(
         [
             python,
@@ -122,6 +152,9 @@ def run_theorem_aligned_suite(
             str(figure_results_csv),
             "--output-dir",
             str(figures_dir),
+            *(["--evidence-results-csv", str(figure_evidence_csv)] if figure_evidence_csv and figure_evidence_csv.exists() else []),
+            "--error-breakdown-csv",
+            str(architecture_error_csv),
         ],
         repo_root,
     )

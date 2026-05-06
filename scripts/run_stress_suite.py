@@ -5,7 +5,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from common.config import DATA_PATH, TRAVERSAL_POLICY_PATH
+from common.config import ALLOW_TRAIN_EVAL, DATA_PATH, TRAVERSAL_POLICY_PATH
+from common.protocol import ensure_heldout_data_path
 from eval.test.react_test import test_dual_memory as react_test_dual_memory
 from eval.test.reflexion_test import test_dual_memory as reflexion_test_dual_memory
 from eval.test.stress_tests import contradictory_insight, drop_memory_entries, inject_noisy_memory
@@ -41,7 +42,15 @@ def main():
     parser.add_argument("--data-path", default=os.path.join(DATA_PATH, "hard_bridge_500_validation.csv"))
     parser.add_argument("--output-path", required=True)
     parser.add_argument("--row-limit", type=int, default=20)
+    parser.add_argument(
+        "--allow-train-eval",
+        action="store_true",
+        default=ALLOW_TRAIN_EVAL,
+        help="Explicitly allow running stress evaluation on a train split. Disabled by default for academic rigor.",
+    )
     args = parser.parse_args()
+
+    ensure_heldout_data_path(args.data_path, allow_train_eval=args.allow_train_eval)
 
     if args.strategy == "full" and not Path(TRAVERSAL_POLICY_PATH).exists():
         raise FileNotFoundError(

@@ -51,6 +51,10 @@ def extract_node_features(node: RetrievedMemoryNode) -> dict[str, float]:
         "is_insight": 1.0 if node.memory_type == "insight" else 0.0,
         "is_observability_memory": 1.0 if node.memory_family == "observability" else 0.0,
         "is_semantic_memory": 1.0 if node.memory_family == "semantic" else 0.0,
+        # Information-Theoretic Breakthrough Features (Q1 requirement)
+        "marginal_gain": float(node.metadata.get("marginal_info_gain", 0.0)),
+        "concept_variance": float(node.metadata.get("concept_assignment_variance", 0.0)),
+        "ontology_alignment": float(max(node.metadata.get("node_assignment_scores", {"_": 0.0}).values())),
     }
 
 
@@ -82,11 +86,21 @@ class HeuristicTraversalPolicy:
             best_node = None
             best_score = float("-inf")
             for node in remaining:
+                features = extract_node_features(node)
                 base_score = self.score_node(node)
                 node_concepts = set(node.ontology_matches or node.weak_concepts)
-                novelty_bonus = 0.1 * len(node_concepts.difference(selected_concepts))
+                
+                # Q1 Breakthrough: Dynamic Information-Theoretic Selection
+                # Penalty for concept redundancy (sequential dependency)
+                redundancy_count = len(node_concepts.intersection(selected_concepts))
+                redundancy_penalty = 0.25 * redundancy_count
+                
+                # Bonus for uncertainty reduction and alignment
+                info_bonus = (0.15 * features["marginal_gain"]) + (0.1 * features["ontology_alignment"])
+                
                 type_bonus = 0.15 if node.memory_type and node.memory_type not in selected_types else 0.0
-                score = base_score + novelty_bonus + type_bonus
+                
+                score = base_score + info_bonus + type_bonus - redundancy_penalty
                 if score > best_score:
                     best_score = score
                     best_node = node

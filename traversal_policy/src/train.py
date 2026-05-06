@@ -5,7 +5,12 @@ import math
 import random
 from pathlib import Path
 
-from common.config import TRAVERSAL_POLICY_PATH, TRAVERSAL_TOP_K
+from common.config import (
+    POLICY_MIN_SUPERVISION_WEIGHT,
+    POLICY_USE_FAILED_EPISODES,
+    TRAVERSAL_POLICY_PATH,
+    TRAVERSAL_TOP_K,
+)
 from traversal_policy.src.dataset import TraversalEpisode, TraversalStepRecord
 from traversal_policy.src.policy_model import (
     TraversalPolicyCheckpoint,
@@ -34,6 +39,8 @@ def _step_features(step: TraversalStepRecord) -> dict[str, float]:
         "weak_concept_count": float(len(weak_concepts)),
         "semantic_support_count": float(len(metadata.get("semantic_supports", []))),
         "review_score_norm": review_score,
+        "candidate_rank_inverse": 1.0 / (1.0 + float(metadata.get("candidate_rank", step.step_index))),
+        "selected_score": float(metadata.get("selected_score", 0.0)),
         "is_experience": 1.0 if step.memory_type == "experience" else 0.0,
         "is_insight": 1.0 if step.memory_type == "insight" else 0.0,
         "is_observability_memory": 1.0 if metadata.get("memory_family") == "observability" else 0.0,
@@ -97,6 +104,7 @@ def load_policy_episodes(path: str | Path) -> list[TraversalEpisode]:
                 question=item.get("question", ""),
                 steps=steps,
                 success=bool(item.get("success", False)),
+                metadata=item.get("metadata", {}) or {},
             )
         )
     return episodes
@@ -115,12 +123,16 @@ def fit_weighted_policy(
     feature_rows: list[dict[str, float]] = []
     selected_rows: list[dict[str, float]] = []
     unselected_rows: list[dict[str, float]] = []
+    strong_positive_episodes = 0
+    weak_negative_episodes = 0
+    skipped_failed_episodes = 0
 
     for episode in episodes:
+        supervision_weight = float((episode.metadata or {}).get("supervision_weight", 0.0))
         for step in episode.steps:
             features = _step_features(step)
             feature_rows.append(features)
-            if step.selected and episode.success:
+            if step.selected and episode.success and supervision_weight >= POLICY_MIN_SUPERVISION_WEIGHT:
                 selected_rows.append(features)
             else:
                 unselected_rows.append(features)
@@ -138,10 +150,14 @@ def fit_weighted_policy(
 
     feature_names, means, stds = _build_normalization_stats(feature_rows)
 
-    pair_examples: list[tuple[list[float], float]] = []
+    pair_examples: list[tuple[list[float], float, float]] = []
     for episode in episodes:
         if not episode.steps:
             continue
+
+        metadata = episode.metadata or {}
+        supervision_weight = float(metadata.get("supervision_weight", 0.0))
+        unsupported_reasoning_score = float(metadata.get("unsupported_reasoning_score", 0.0))
 
         normalized_steps = [
             (step, _normalize_row(_step_features(step), means, stds))
@@ -150,22 +166,34 @@ def fit_weighted_policy(
         selected = [row for row in normalized_steps if row[0].selected]
         unselected = [row for row in normalized_steps if not row[0].selected]
 
-        if episode.success:
+        if episode.success and supervision_weight >= POLICY_MIN_SUPERVISION_WEIGHT:
+            strong_positive_episodes += 1
             for selected_step, selected_features in selected:
                 if not unselected:
                     continue
                 for _, candidate_features in unselected:
                     pair_examples.append(
-                        (_subtract_rows(selected_features, candidate_features, feature_names), 1.0)
+                        (
+                            _subtract_rows(selected_features, candidate_features, feature_names),
+                            1.0,
+                            supervision_weight,
+                        )
                     )
-        else:
+        elif (not episode.success) and POLICY_USE_FAILED_EPISODES and unsupported_reasoning_score >= 0.75:
+            weak_negative_episodes += 1
             for failed_step, failed_features in selected:
                 if not unselected:
                     continue
                 for _, candidate_features in unselected:
                     pair_examples.append(
-                        (_subtract_rows(failed_features, candidate_features, feature_names), -1.0)
+                        (
+                            _subtract_rows(failed_features, candidate_features, feature_names),
+                            -1.0,
+                            min(0.35, max(0.10, unsupported_reasoning_score / 2.0)),
+                        )
                     )
+        elif not episode.success:
+            skipped_failed_episodes += 1
 
     if not pair_examples:
         positive_mean = {
@@ -190,6 +218,11 @@ def fit_weighted_policy(
                 "episodes": len(episodes),
                 "pair_examples": 0,
                 "training_method": "mean_difference_fallback",
+                "strong_positive_episodes": strong_positive_episodes,
+                "weak_negative_episodes": weak_negative_episodes,
+                "skipped_failed_episodes": skipped_failed_episodes,
+                "min_supervision_weight": POLICY_MIN_SUPERVISION_WEIGHT,
+                "use_failed_episodes": POLICY_USE_FAILED_EPISODES,
             },
         )
 
@@ -201,11 +234,11 @@ def fit_weighted_policy(
     for _ in range(max(1, epochs)):
         shuffled = list(pair_examples)
         rng.shuffle(shuffled)
-        for feature_vector, label in shuffled:
+        for feature_vector, label, pair_weight in shuffled:
             signed_margin = label * _dot(weights, feature_vector)
             if signed_margin < margin:
                 for idx, value in enumerate(feature_vector):
-                    gradient = (label * float(value)) - (l2 * weights[idx])
+                    gradient = pair_weight * ((label * float(value)) - (l2 * weights[idx]))
                     weights[idx] += learning_rate * gradient
             for idx, value in enumerate(weights):
                 averaged_weights[idx] += value
@@ -233,6 +266,11 @@ def fit_weighted_policy(
             "learning_rate": learning_rate,
             "margin": margin,
             "l2": l2,
+            "strong_positive_episodes": strong_positive_episodes,
+            "weak_negative_episodes": weak_negative_episodes,
+            "skipped_failed_episodes": skipped_failed_episodes,
+            "min_supervision_weight": POLICY_MIN_SUPERVISION_WEIGHT,
+            "use_failed_episodes": POLICY_USE_FAILED_EPISODES,
         },
     )
 

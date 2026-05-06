@@ -33,7 +33,8 @@ The `scripts/` folder contains entry-point runners for the main repo workflows:
 - `run_transfer_eval.py`: summarize in-domain vs out-of-domain results
 - `run_result_summary.py`: aggregate result CSVs into a paper table
 - `run_prepare_evidence_annotation.py`: bootstrap an evidence-annotation template from result CSVs
-- `run_annotated_evidence_eval.py`: score result CSVs against manual evidence annotations
+- `run_annotated_evidence_eval.py`: score result CSVs against manual evidence annotations, including support-set metrics
+- `run_architecture_validity.py`: generate a paper-facing architecture-validity and error-decomposition report
 - `run_paper_figures.py`: generate publication-style PNG figures from summary/result CSVs
 - `run_theorem_experiment_suite.py`: run the paper-facing experiment suite with summary, stress, transfer, optional evidence eval, and figures
 - `run_export.py`: export Langfuse traces -> JSON
@@ -72,7 +73,8 @@ python .\scripts\run_result_summary.py --inputs .\eval\data\ablations\react_base
 - `ALLOW_DEFAULT_EXAMPLE_PADDING=false` is the paper-safe setting; it prevents hidden fallback few-shot padding in dual-memory runs.
 - `run_result_summary.py --reference ...` now computes paired bootstrap delta confidence intervals against a baseline CSV.
 - `run_prepare_evidence_annotation.py` writes annotator-friendly JSON with candidate and selected retrieval paths.
-- `run_annotated_evidence_eval.py` produces evidence precision/recall/F1, sufficient-set coverage, and contradiction exposure from gold annotations.
+- `run_annotated_evidence_eval.py` produces evidence precision/recall/F1, support-set metrics, sufficient-set coverage, and contradiction exposure from gold annotations.
+- `run_experiment.py`, `run_ablation_suite.py`, `run_stress_suite.py`, and `run_theorem_experiment_suite.py` now guard against accidentally evaluating on a `train` split unless you explicitly pass `--allow-train-eval`.
 
 ## Retrieval strategies
 

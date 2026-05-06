@@ -36,8 +36,10 @@ Repo hỗ trợ:
 - learned mode
 - full mode
 - grounding metrics
+- annotated evidence + support-set grounding metrics
 - stress tests
 - transfer summaries
+- architecture-validity and error-decomposition reports
 - result summary tables
 - local control panel để chạy các bước bằng giao diện web
 

@@ -7,6 +7,8 @@ from typing import Any
 
 import pandas as pd
 
+from eval.test.support_set_metrics import support_set_best_match
+
 
 def _parse_json_field(value: Any, default):
     if value is None:
@@ -128,6 +130,7 @@ def score_against_annotations(
             for group in annotation.sufficient_evidence_sets
         ]
         sufficient_hit = 1.0 if any(group and group.issubset(predicted_ids) for group in sufficient_sets) else 0.0
+        support_set_scores = support_set_best_match(predicted_ids, sufficient_sets)
         contradiction_exposure = (
             len(predicted_ids.intersection(contradiction_ids)) / len(predicted_ids)
             if predicted_ids else 0.0
@@ -140,6 +143,7 @@ def score_against_annotations(
                 "evidence_recall": recall,
                 "evidence_f1": f1,
                 "evidence_set_coverage": sufficient_hit,
+                **support_set_scores,
                 "contradiction_exposure_rate": contradiction_exposure,
                 "annotation_status": annotation.annotation_status,
             }
@@ -152,6 +156,11 @@ def score_against_annotations(
         "evidence_recall": float(scored_df["evidence_recall"].mean()) if "evidence_recall" in scored_df else 0.0,
         "evidence_f1": float(scored_df["evidence_f1"].mean()) if "evidence_f1" in scored_df else 0.0,
         "evidence_set_coverage": float(scored_df["evidence_set_coverage"].mean()) if "evidence_set_coverage" in scored_df else 0.0,
+        "support_set_best_precision": float(scored_df["support_set_best_precision"].mean()) if "support_set_best_precision" in scored_df else 0.0,
+        "support_set_best_recall": float(scored_df["support_set_best_recall"].mean()) if "support_set_best_recall" in scored_df else 0.0,
+        "support_set_best_f1": float(scored_df["support_set_best_f1"].mean()) if "support_set_best_f1" in scored_df else 0.0,
+        "support_set_best_jaccard": float(scored_df["support_set_best_jaccard"].mean()) if "support_set_best_jaccard" in scored_df else 0.0,
+        "support_set_exact_match": float(scored_df["support_set_exact_match"].mean()) if "support_set_exact_match" in scored_df else 0.0,
         "contradiction_exposure_rate": float(scored_df["contradiction_exposure_rate"].mean()) if "contradiction_exposure_rate" in scored_df else 0.0,
     }
 

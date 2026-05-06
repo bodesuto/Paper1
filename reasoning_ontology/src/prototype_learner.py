@@ -202,9 +202,19 @@ class WeakLabelPrototypeLearner:
             neighbor_centroid = _blend_vectors(neighbor_vectors)
 
             centroid = list(raw_centroid)
+            
+            # Contrastive Latent Induction Step:
+            # We don't just subtract the centroid; we compute a repulsion vector
+            # that is orthogonal to the shared concept subspace if possible.
+            if hard_negative_centroid:
+                # Project raw_centroid onto hard_negative_centroid to find the redundant component
+                dot_prod = _dot(raw_centroid, hard_negative_centroid)
+                # Repulsion: move away from negative while staying close to raw
+                repulsion = _subtract(raw_centroid, hard_negative_centroid, scale=self.hard_negative_weight)
+                centroid = _add(centroid, repulsion, scale=0.5)
+
             centroid = _add(centroid, type_centroid, self.type_smoothing)
             centroid = _add(centroid, neighbor_centroid, self.neighbor_smoothing)
-            centroid = _subtract(centroid, hard_negative_centroid, self.hard_negative_weight)
             centroid = _normalize(centroid)
 
             success_count = sum(1 for _, _, success in vectors if success)

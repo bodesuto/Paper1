@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dual_memory_kg"
+version = "1.0.0"
+description = "A Domain-Agnostic Dual-Memory Framework for Grounded Reasoning"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "beautifulsoup4==4.13.5",
+    "datasets==4.0.0",
+    "deepeval==3.7.0",
+    "fastapi",
+    "matplotlib",
+    "langchain==0.3.27",
+    "langchain-classic",
+    "langchain-community",
+    "langchain-core==0.3.79",
+    "langfuse",
+    "langchain-google-genai",
+    "langchain-openai==0.3.35",
+    "neo4j",
+    "numpy",
+    "openai==1.109.1",
+    "pandas==2.2.2",
+    "python-dotenv",
+    "pydantic-settings",
+    "ragas==0.3.9",
+    "requests==2.32.5",
+    "seaborn",
+    "streamlit==1.28.0",
+    "tiktoken==0.12.0",
+    "uvicorn",
+    "wikipedia"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio",
+    "black>=22.0",
+    "isort>=5.10",
+    "flake8>=5.0",
+    "mypy>=1.0"
+]
+
+[tool.setuptools]
+packages = [
+    "agents", "classifier", "common", "control_panel", "data_pipeline", 
+    "diagnostics", "domain_adapters", "eval", "evidence_selector", 
+    "knowledge_graph", "log_transformation", "reasoning_ontology", 
+    "scripts", "traversal_policy"
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+disallow_untyped_defs = false
