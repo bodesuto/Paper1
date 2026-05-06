@@ -57,3 +57,32 @@ Thumbs.db
 output/
 eval/data/mini_*.csv
 eval/data/*_smoke_results.csv
+
+# Các file chứa secret (Quan trọng nhất)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+build/
+dist/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Hệ thống & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+
