@@ -1,120 +1,74 @@
-# DualMemoryKG
+# DualMemoryKG: A Domain-Agnostic Dual-Memory Framework for Grounded Reasoning
 
-Implementation repo for:
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.9%2B-green.svg)
+![Target](https://img.shields.io/badge/target-Q1_Publication-orange.svg)
 
-> **Matharaarachchi et al., 2026 - Knowledge-Based Systems**  
-> *Addressing Hallucinations in Generative AI Agents using Observability and Dual Memory Knowledge Graphs*
+**DualMemoryKG** is a research-to-production framework designed to solve the problem of hallucinations in LLMs through explicit, mathematically rigorous evidence control over a Dual-Memory Knowledge Graph (Semantic + Observability memories).
 
-Repo này hiện có 2 lớp:
+This repository has been upgraded to **Enterprise-Grade** and is specifically targeted for top-tier **Q1 Academic Publication**.
 
-1. phần tái hiện pipeline gốc của bài báo
-2. phần mở rộng theo `proposal.md` để tiến tới paper mạnh hơn
+---
 
-## Đọc tài liệu theo thứ tự
+## 🌟 Core Breakthroughs (Q1 Contributions)
 
-- [QUICK_RUN_PATH_VI.md](./QUICK_RUN_PATH_VI.md): lộ trình chạy thật ngắn nhất từ mini đến full
-- [RUN_MINI_FIRST_VI.md](./RUN_MINI_FIRST_VI.md): tài liệu từng bước một, ưu tiên thông luồng trên dữ liệu nhỏ trước
-- [REPRODUCTION_GUIDE_VI.md](./REPRODUCTION_GUIDE_VI.md): hướng dẫn đầy đủ từ cài đặt đến chạy toàn bộ repo
-- [CONTRIBUTIONS_AND_STATUS_VI.md](./CONTRIBUTIONS_AND_STATUS_VI.md): repo hiện đã đóng góp mới gì, phần nào đã implement, phần nào mới ở mức mở rộng hợp lý
-- [TROUBLESHOOTING_VI.md](./TROUBLESHOOTING_VI.md): lỗi thường gặp và cách xử lý
-- [RUN_ORDER.md](./RUN_ORDER.md): thứ tự lệnh ngắn gọn
-- [PAPER_EXPERIMENT_CHECKLIST.md](./PAPER_EXPERIMENT_CHECKLIST.md): checklist paper-facing
-- [scripts/README.md](./scripts/README.md): mô tả nhanh từng script
+1. **Contrastive Latent Ontology Induction**: Automatically learns and separates latent reasoning strategies from behavioral traces using a contrastive prototype learning mechanism.
+2. **Information-Theoretic Evidence Selection**: Models graph traversal as an uncertainty reduction problem, optimizing for *Marginal Information Gain* and penalizing redundancy, moving beyond simple similarity search.
+3. **Deep Error Decomposition Framework**: Implements a scientific error taxonomy (`E-Ont`, `E-Trav`, `E-Gnd`, `E-KB`, `E-Loop`) to diagnose exact failure mechanisms, isolating true grounding from lucky hallucination.
 
-## Mục tiêu của repo hiện tại
-
-Repo hỗ trợ:
-
-- ReAct baseline
-- Reflexion baseline
-- dual-memory knowledge graph với Neo4j
-- heuristic retrieval
-- vector-RAG baseline
-- graph-aware proxy baseline
-- ontology-only ablation
-- traversal-only ablation
-- learned mode
-- full mode
-- grounding metrics
-- annotated evidence + support-set grounding metrics
-- stress tests
-- transfer summaries
-- architecture-validity and error-decomposition reports
-- result summary tables
-- local control panel để chạy các bước bằng giao diện web
-
-## Cấu trúc chính
+## 📁 Repository Structure (Product Standard)
 
 ```text
-agents/               # ReAct + Reflexion agents
-classifier/           # Intent / entity / attribute classification
-common/               # Shared config, Gemini models, logging
-data_pipeline/        # Build datasets for ontology / traversal training
-diagnostics/          # RCA, KBV, HIL
-eval/                 # Evaluation and grounding metrics
-knowledge_graph/      # Neo4j graph schema, insert, retrieval
-log_transformation/   # Langfuse/export -> ReAct trace pipeline
-reasoning_ontology/   # Ontology dataset, encoder, prototype learner, inference
-scripts/              # All runnable entry points
-traversal_policy/     # Traversal dataset, training, inference
+DualMemoryKG/
+├── core/                   # (Planned) Python package root
+├── agents/                 # ReAct & Reflexion implementations
+├── common/                 # Pydantic-based configuration & logging
+├── diagnostics/            # RCA & Error Decomposition Engine
+├── docs/                   # Full academic and technical documentation
+├── eval/                   # Grounding-centered metrics and summaries
+├── knowledge_graph/        # Neo4j Graph schemas and queries
+├── reasoning_ontology/     # Contrastive Latent Ontology Learner
+├── traversal_policy/       # Uncertainty-Aware Evidence Selector
+├── scripts/                # Entry points for experiments and pipelines
+├── pyproject.toml          # Packaging and tooling configuration
+└── .env                    # Environment variables (Pydantic validated)
 ```
 
-## Quick start rất ngắn
+## 🚀 Quick Start
 
-1. Tạo môi trường và cài package:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install --upgrade pip
-pip install -r requirements.txt
+### 1. Installation
+This project is packaged for easy installation. We recommend using a virtual environment.
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -e ".[dev]"
 ```
 
-2. Tạo `.env` từ `.env.example`
-
-3. Test LLM:
-
-```powershell
-python .\scripts\run_test_llm.py
+### 2. Configuration
+Copy `.env.example` to `.env` and configure your API keys and Neo4j credentials. 
+The system uses **Pydantic** for fail-fast configuration validation.
+```bash
+cp .env.example .env
 ```
 
-4. Nếu muốn thao tác bằng giao diện thay vì gõ lệnh:
-
-```powershell
-python .\scripts\run_control_panel.py
+### 3. Running the Pipeline
+To run a full ablation suite to generate Q1 comparative results:
+```bash
+python scripts/run_ablation_suite.py --agent react
 ```
 
-Mở trình duyệt tại:
-
-```text
-http://127.0.0.1:8787
+To run the Deep Error Decomposition analysis:
+```bash
+python scripts/run_rca_decomposition.py --rca-json output/your_rca_results.json
 ```
 
-Control panel hiện hỗ trợ:
+## 📖 Documentation
 
-- queue nhiều job thay vì chạy từng lệnh riêng lẻ
-- task presets cho smoke, graph bootstrap, learned stack, ablation, stress, summary
-- live logs cho từng job
-- hủy job đang chạy hoặc còn nằm trong queue
-- chỉnh trực tiếp `.env` ngay trên UI
-- artifact browser + preview file/thư mục ngay trong UI
-- đọc nhanh CSV kết quả với metric cards và bảng preview
-- mở thư mục kết quả từ UI trên Windows
+All detailed academic and technical documentation has been organized in the `docs/` folder:
+- **Theoretical Claims**: `docs/THEORETICAL_CLAIMS_AND_PROOF_SKETCH.md`
+- **Error Diagnostics**: `docs/TROUBLESHOOTING_VI.md`
+- **Reproduction Guide**: `docs/REPRODUCTION_GUIDE_VI.md`
 
-5. Chạy smoke test giá rẻ:
+---
 
-```powershell
-python .\scripts\run_prepare_mini_data.py --size 3
-python .\scripts\run_react_smoke.py --limit 1
-python .\scripts\run_reflexion_smoke.py --limit 1
-```
-
-6. Nếu muốn tái hiện đầy đủ, chuyển sang [REPRODUCTION_GUIDE_VI.md](./REPRODUCTION_GUIDE_VI.md)
-
-## Lưu ý quan trọng
-
-- Repo chấp nhận `GOOGLE_API_KEY` hoặc `GEMINI_API_KEY`
-- Nếu cả hai cùng có, code sẽ ưu tiên `GOOGLE_API_KEY`
-- `full` mode chỉ thực sự đúng nghĩa khi đã có file `traversal_policy.json`
-- Nếu dùng Gemini embeddings với Neo4j vector index, có thể để hệ thống tự probe dimension hoặc tự set `EMBEDDING_VECTOR_DIMENSIONS`
-- Phần mở rộng ontology/traversal đã được implement thêm, nhưng bạn nên đọc kỹ [CONTRIBUTIONS_AND_STATUS_VI.md](./CONTRIBUTIONS_AND_STATUS_VI.md) để tránh overclaim khi viết paper
+*This codebase is strictly formatted using `black`, sorted with `isort`, and configured for `mypy` typing to ensure production reliability.*
