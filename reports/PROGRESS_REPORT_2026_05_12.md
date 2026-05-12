@@ -98,6 +98,38 @@ Sử dụng bộ chỉ số tiêu chuẩn từ DeepEval để đảm bảo tính
 *   **Persistent Knowledge Base:** Khác với RAG truyền thống bị giới hạn bởi cửa sổ ngữ cảnh, DualMemoryKG tích lũy tri thức vĩnh viễn trên Neo4j.
 *   **Evolving Intelligence:** Hệ thống được thiết kế để "càng dùng càng thông minh", biến các trải nghiệm thất bại trong quá khứ thành bài học kinh nghiệm cho tương lai thông qua module Reflexion và Prototype Learner.
 
+## PHỤ LỤC: PHÂN TÍCH CHUYÊN SÂU CÁC ĐỘT PHÁ CÔNG NGHỆ
+
+### 1. Kiến trúc Trí nhớ Kép (Dual Memory Architecture)
+*   **Cơ chế Kỹ thuật:** Hệ thống triển khai một cấu trúc **Hybrid Retrieval Bridge** kết hợp giữa *Dense Retrieval* (truy xuất đậm đặc qua ChromaDB) và *Symbolic Retrieval* (truy xuất ký hiệu qua Neo4j). Kỹ thuật này sử dụng kết quả từ không gian Vector để định vị "điểm neo" ban đầu trên Đồ thị tri thức, sau đó áp dụng thuật toán *Graph Traversal* để thu thập ngữ cảnh liên kết đa bậc (Multi-hop context).
+*   **Lý luận Khoa học:** Giải quyết bài toán **"Context Fragmentation"** (mảnh vỡ ngữ cảnh) trong RAG truyền thống. Trong khi Vector chỉ tìm được các đoạn văn bản tương đồng bề mặt, Đồ thị tri thức bảo toàn các quan hệ thực thể, cho phép Agent duy trì tính nhất quán logic trong các truy vấn phức tạp.
+*   **Tác động:** Tăng cường tính giải thích (Explainability) của hệ thống thông qua việc minh bạch hóa con đường lập luận (Reasoning Path) trên đồ thị.
+
+### 2. Cơ chế Lập luận Tự thích nghi (Agentic Reasoning)
+*   **Cơ chế Kỹ thuật:** Ứng dụng mô hình **Self-Correction Loop** thông qua hai trạng thái: *Execution* (thực thi qua ReAct) và *Verification* (kiểm chứng qua Reflexion). ReAct phân rã câu hỏi thành chuỗi tư duy (Chain-of-Thought), trong khi Reflexion đóng vai trò là một module "phê bình" (Critic) để đánh giá các giả định của Agent dựa trên bằng chứng thu thập được.
+*   **Lý luận Khoa học:** Dựa trên lý thuyết **"Dual Process Theory"** của tâm lý học nhận thức (Hệ thống 1 - phản xạ nhanh và Hệ thống 2 - tư duy chậm). Reflexion đại diện cho Hệ thống 2, giúp Agent thoát khỏi các bẫy logic và ảo giác (Hallucination) do việc dự đoán token kế tiếp của LLM gây ra.
+*   **Tác động:** Tạo ra khả năng tự hồi phục (Self-healing) khi Agent gặp phải các thông tin mâu thuẫn hoặc thiếu hụt.
+
+### 3. Tối ưu hóa bằng Lý thuyết Thông tin (Information-Theoretic Control)
+*   **Cơ chế Kỹ thuật:** Triển khai module **Evidence Selector** dựa trên nguyên lý *Information Bottleneck*. Hệ thống tính toán độ đo **Surprisal (Entropy)** cho từng mảnh tri thức. Chỉ những thông tin mang lại giá trị gia tăng tối đa (Maximized Information Gain) và không dư thừa so với kiến thức hiện có mới được nạp vào context window của Agent.
+*   **Lý luận Khoa học:** Tối ưu hóa tài nguyên thông tin dựa trên giới hạn của *Attention Mechanism*. Việc loại bỏ nhiễu thông tin (Noise Reduction) giúp LLM tập trung vào các đặc trưng quan trọng nhất của dữ liệu, từ đó cải thiện chất lượng suy luận.
+*   **Tác động:** Giảm thiểu đáng kể chi phí vận hành (Token cost) đồng thời tăng độ chính xác của câu trả lời nhờ loại bỏ các thông tin gây nhiễu (Distractors).
+
+### 4. Học tương phản tiềm ẩn (Contrastive Latent Induction)
+*   **Cơ chế Kỹ thuật:** Áp dụng kỹ thuật **Metric Learning** trong không gian latent. Khi phát hiện các khái niệm có độ tương đồng cosine cao nhưng mang ý nghĩa ngữ nghĩa khác biệt, hệ thống sẽ thực hiện một bước *Repulsion Step* - đẩy xa các vector đại diện này để tạo ra các ranh giới tri thức rõ ràng hơn trong bộ nhớ dài hạn.
+*   **Lý luận Khoa học:** Giải quyết hiện tượng **"Semantic Overlap"** trong các mô hình embedding. Bằng cách tinh chỉnh không gian latent theo thời gian thực (On-the-fly refinement), hệ thống đạt được độ phân giải tri thức (Knowledge Resolution) cực cao.
+*   **Tác động:** Cho phép Agent phân biệt và lập luận chính xác trên các thực thể cực kỳ tương đồng nhưng có bản chất pháp lý hoặc kỹ thuật khác biệt.
+
+### 5. Tiến hóa Ontology động (Continual Learning)
+*   **Cơ chế Kỹ thuật:** Xây dựng một **Closed-loop Learning System**. Sau mỗi chu trình lập luận thành công, các tri thức mới (New Insights) và các quan hệ thực thể mới phát hiện được sẽ được nạp vào module *Graph Upsert*. Hệ thống sử dụng thuật toán *Incremental Schema Evolution* để cập nhật Ontology mà không làm gián đoạn dịch vụ.
+*   **Lý luận Khoa học:** Mô phỏng cơ chế **"Synaptic Plasticity"** (tính dẻo của synap). Hệ thống không cố định về mặt tri thức mà liên tục tái cấu trúc đồ thị dựa trên kinh nghiệm tương tác thực tế, giúp giải quyết bài toán "Data Stale" (dữ liệu cũ) của LLM.
+*   **Tác động:** Chuyển đổi Agent từ một công cụ tĩnh thành một hệ thống thông minh tiến hóa theo thời gian (Evolving AI).
+
+### 6. Ablation Suite tự động & AI Evaluation
+*   **Cơ chế Kỹ thuật:** Tích hợp bộ khung thực nghiệm **Controlled Experimentation**. Sử dụng 8 chiến lược truy xuất từ *Baseline* đến *Hybrid-Learned* làm các biến số độc lập. Đánh giá dựa trên mô hình **LLM-as-a-judge** (DeepEval) với cơ chế CoT (Chain-of-Thought) để đảm bảo tính khách quan và minh bạch của điểm số.
+*   **Lý luận Khoa học:** Áp dụng phương pháp luận **Empirical Software Engineering**. Việc đo lường Faithfulness và Contextual Precision một cách tự động giúp loại bỏ sự chủ quan của con người và cung cấp các bằng chứng thống kê (Statistical Significance) cho nghiên cứu.
+*   **Tác động:** Cung cấp cơ sở dữ liệu thực nghiệm vững chắc, giúp khẳng định sự đóng góp của từng thành phần trong hệ thống đối với hiệu suất tổng thể.
+
 ---
 **Tóm tắt giá trị khoa học:** Hệ thống không chỉ là một công cụ truy xuất thông tin, mà là một thực thể học tập liên tục, kết hợp giữa toán học (Information Theory) và khoa học nhận thức (Dual Memory).
 
