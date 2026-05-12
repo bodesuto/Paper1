@@ -153,6 +153,13 @@ Sử dụng bộ chỉ số tiêu chuẩn từ DeepEval để đảm bảo tính
 2.  **Đóng góp về Giải thuật tối ưu (Algorithmic Contribution):** Giới thiệu phương pháp **Truy xuất dựa trên tối ưu hóa Entropy (Entropy-driven Retrieval)**. Thay vì sử dụng các hàm tương đồng bề mặt (Cosine similarity), giải pháp này ứng dụng Lý thuyết Thông tin để định lượng "Giá trị thông tin thực" (Information Utility) của từng mảnh dữ liệu, giải quyết bài toán tối ưu hóa trong điều kiện giới hạn của cửa sổ ngữ cảnh (Context Window Constraints).
 3.  **Đóng góp về Phương pháp luận (Methodological Contribution):** Đề xuất cơ chế **Tự hiệu chỉnh Không gian Tiềm ẩn (Active Latent Refinement)**. Thông qua việc Induction các Prototype và thực hiện Repulsion trong không gian vector, nghiên cứu này đóng góp một phương pháp luận mới để xử lý hiện tượng "Semantic Drift" (trôi dạt ngữ nghĩa) - một thách thức lớn trong ngành xử lý ngôn ngữ tự nhiên hiện nay.
 
+## 17. ĐÁNH GIÁ PHẢN BIỆN & PHÂN TÍCH RỦI RO (CRITICAL SELF-REVIEW)
+Để đảm bảo tính trung thực và khách quan trong nghiên cứu khoa học, chúng tôi tự thực hiện đánh giá phản biện về tình trạng hiện tại của dự án:
+
+1.  **Khoảng cách giữa Lý thuyết và Thực nghiệm (The Empirical Gap):** Mặc dù khung lý thuyết về Dual Memory và Information-Theoretic đã được định hình sắc nét, nhưng quy mô thực nghiệm hiện tại (số lượng câu hỏi truy vấn) vẫn còn khiêm tốn. Để đạt tới sự thuyết phục tuyệt đối cho bài báo Q1, cần mở rộng mẫu thử nghiệm lên quy mô N > 500 để đạt được ý nghĩa thống kê (Statistical Significance).
+2.  **Sự phụ thuộc vào AI-as-a-judge (The Evaluation Bias):** Việc sử dụng DeepEval/Gemini làm giám khảo mang lại hiệu năng cao nhưng tiềm ẩn rủi ro về định kiến mô hình (Model Bias). Một đợt kiểm chứng chéo (Cross-validation) với sự tham gia của các chuyên gia con người (Human-in-the-loop) trên một tập mẫu là điều kiện bắt buộc để bảo vệ kết quả trước hội đồng phản biện.
+3.  **Điểm nghẽn Dữ liệu Đồ thị (Data Ingestion Bottleneck):** Sức mạnh của Graph Retrieval phụ thuộc hoàn toàn vào độ đậm đặc và chất lượng của Ontology. Hiện tại, đồ thị tri thức đang ở giai đoạn sơ khởi; việc làm giàu tri thức chuyên sâu là ưu tiên hàng đầu để chứng minh tính ưu việt của giải thuật Duyệt đồ thị đa bậc (Multi-hop Traversal).
+
 ---
 **Tóm tắt giá trị khoa học:** Hệ thống không chỉ là một công cụ truy xuất thông tin, mà là một thực thể học tập liên tục, kết hợp giữa toán học (Information Theory) và khoa học nhận thức (Dual Memory).
 
