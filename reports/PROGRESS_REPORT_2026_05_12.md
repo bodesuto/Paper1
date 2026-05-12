@@ -146,6 +146,13 @@ Sử dụng bộ chỉ số tiêu chuẩn từ DeepEval để đảm bảo tính
 3.  **Multi-Agent Collaborative Memory:** Phát triển giao thức chia sẻ tri thức giữa mạng lưới các Agent, cho phép cộng tác lập luận trên một đồ thị tri thức phân tán quy mô lớn.
 4.  **Green AI Optimization:** Tối ưu hóa hiệu năng tính toán và lượng Token tiêu thụ, hướng tới việc xây dựng các Agent thông minh nhưng có chi phí vận hành thấp và thân thiện với môi trường.
 
+## 16. TUYÊN BỐ ĐÓNG GÓP KHOA HỌC (SCIENTIFIC CONTRIBUTION STATEMENT)
+Để khẳng định giá trị hàn lâm và tính đột phá của dự án trước hội đồng khoa học quốc tế, DualMemoryKG được định vị dựa trên 3 đóng góp khoa học trọng yếu:
+
+1.  **Đóng góp về Kiến trúc hệ thống (Architectural Contribution):** Đề xuất một mô hình **Trí nhớ lai tích hợp (Unified Hybrid Memory)** giải quyết sự mâu thuẫn giữa tính linh hoạt của không gian Vector (Dense representation) và tính chính xác của Đồ thị tri thức (Symbolic representation). Đây không chỉ là việc kết hợp công cụ, mà là một cơ chế đồng bộ hóa dữ liệu đa phương thức để bảo toàn tính toàn vẹn của lập luận đa bước (Multi-hop Reasoning integrity).
+2.  **Đóng góp về Giải thuật tối ưu (Algorithmic Contribution):** Giới thiệu phương pháp **Truy xuất dựa trên tối ưu hóa Entropy (Entropy-driven Retrieval)**. Thay vì sử dụng các hàm tương đồng bề mặt (Cosine similarity), giải pháp này ứng dụng Lý thuyết Thông tin để định lượng "Giá trị thông tin thực" (Information Utility) của từng mảnh dữ liệu, giải quyết bài toán tối ưu hóa trong điều kiện giới hạn của cửa sổ ngữ cảnh (Context Window Constraints).
+3.  **Đóng góp về Phương pháp luận (Methodological Contribution):** Đề xuất cơ chế **Tự hiệu chỉnh Không gian Tiềm ẩn (Active Latent Refinement)**. Thông qua việc Induction các Prototype và thực hiện Repulsion trong không gian vector, nghiên cứu này đóng góp một phương pháp luận mới để xử lý hiện tượng "Semantic Drift" (trôi dạt ngữ nghĩa) - một thách thức lớn trong ngành xử lý ngôn ngữ tự nhiên hiện nay.
+
 ---
 **Tóm tắt giá trị khoa học:** Hệ thống không chỉ là một công cụ truy xuất thông tin, mà là một thực thể học tập liên tục, kết hợp giữa toán học (Information Theory) và khoa học nhận thức (Dual Memory).
 
