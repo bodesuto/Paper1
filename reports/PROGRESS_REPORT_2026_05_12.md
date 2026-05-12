@@ -116,19 +116,35 @@ Sử dụng bộ chỉ số tiêu chuẩn từ DeepEval để đảm bảo tính
 *   **Tác động:** Giảm thiểu đáng kể chi phí vận hành (Token cost) đồng thời tăng độ chính xác của câu trả lời nhờ loại bỏ các thông tin gây nhiễu (Distractors).
 
 ### 4. Học tương phản tiềm ẩn (Contrastive Latent Induction)
-*   **Cơ chế Kỹ thuật:** Áp dụng kỹ thuật **Metric Learning** trong không gian latent. Khi phát hiện các khái niệm có độ tương đồng cosine cao nhưng mang ý nghĩa ngữ nghĩa khác biệt, hệ thống sẽ thực hiện một bước *Repulsion Step* - đẩy xa các vector đại diện này để tạo ra các ranh giới tri thức rõ ràng hơn trong bộ nhớ dài hạn.
-*   **Lý luận Khoa học:** Giải quyết hiện tượng **"Semantic Overlap"** trong các mô hình embedding. Bằng cách tinh chỉnh không gian latent theo thời gian thực (On-the-fly refinement), hệ thống đạt được độ phân giải tri thức (Knowledge Resolution) cực cao.
-*   **Tác động:** Cho phép Agent phân biệt và lập luận chính xác trên các thực thể cực kỳ tương đồng nhưng có bản chất pháp lý hoặc kỹ thuật khác biệt.
+*   **Cơ chế Kỹ thuật Chuyên sâu:** Áp dụng giải thuật **Metric Learning** dựa trên cơ chế *Repulsion Force* trong không gian Latent. Khi hệ thống phát hiện các thực thể có độ tương đồng Cosine vượt ngưỡng (threshold > 0.9) nhưng mang các nhãn thực thể (Entity Labels) khác biệt, module `PrototypeLearner` sẽ kích hoạt một bước hiệu chỉnh không gian vector. Kỹ thuật này sử dụng một hàm mất mát tương phản (Contrastive Loss) để tạo ra lực đẩy giữa các đại diện vector, giúp ngăn chặn hiện tượng *Centroid Collapse* (các cụm tri thức bị gộp làm một).
+*   **Lý luận Khoa học:** Giải quyết triệt để hiện tượng **"Semantic Overlap"** (chồng lấn ngữ nghĩa) trong các mô hình embedding tĩnh. Bằng cách tinh chỉnh cấu trúc không gian tiềm ẩn theo thời gian thực (On-the-fly refinement), hệ thống đạt được độ phân giải tri thức (Knowledge Resolution) ở mức độ vi mô, cho phép Agent xử lý các sắc thái ngữ nghĩa tinh tế.
+*   **Tác động:** Tăng cường khả năng phân biệt và lập luận chính xác trên các thực thể có từ vựng tương đồng nhưng bản chất pháp lý, kỹ thuật hoặc logic hoàn toàn khác biệt.
 
 ### 5. Tiến hóa Ontology động (Continual Learning)
-*   **Cơ chế Kỹ thuật:** Xây dựng một **Closed-loop Learning System**. Sau mỗi chu trình lập luận thành công, các tri thức mới (New Insights) và các quan hệ thực thể mới phát hiện được sẽ được nạp vào module *Graph Upsert*. Hệ thống sử dụng thuật toán *Incremental Schema Evolution* để cập nhật Ontology mà không làm gián đoạn dịch vụ.
-*   **Lý luận Khoa học:** Mô phỏng cơ chế **"Synaptic Plasticity"** (tính dẻo của synap). Hệ thống không cố định về mặt tri thức mà liên tục tái cấu trúc đồ thị dựa trên kinh nghiệm tương tác thực tế, giúp giải quyết bài toán "Data Stale" (dữ liệu cũ) của LLM.
-*   **Tác động:** Chuyển đổi Agent từ một công cụ tĩnh thành một hệ thống thông minh tiến hóa theo thời gian (Evolving AI).
+*   **Cơ chế Kỹ thuật Chuyên sâu:** Xây dựng kiến trúc **Tri-Memory Cycle** bao gồm: *Working Memory* (lưu trữ Reasoning Traces tạm thời), *Validation Layer* (lọc các chuỗi lập luận dẫn đến kết quả đúng), và *Long-term Graph* (Neo4j). Hệ thống ứng dụng thuật toán **Incremental Schema Evolution** để tự động cập nhật Ontology. Mỗi khi một chuỗi lập luận mới được kiểm chứng là thành công, các "Insight" và quan hệ thực thể mới sẽ được chuyển đổi thành các Node và Edge, nạp ngược lại vào đồ thị tri thức mà không làm gián đoạn luồng xử lý hiện hành.
+*   **Lý luận Khoa học:** Mô phỏng cơ chế **"Synaptic Plasticity"** (tính dẻo của synap) trong não bộ. Giải pháp này xử lý thành công bài toán *Plasticity-Stability Dilemma* - sự cân bằng giữa việc giữ vững tri thức cũ ổn định và tính linh hoạt trong việc tiếp thu tri thức mới, giúp Agent thoát khỏi sự phụ thuộc vào dữ liệu huấn luyện tĩnh.
+*   **Tác động:** Chuyển đổi Agent từ một công cụ tĩnh thành một hệ thống thông minh có khả năng tự tiến hóa và tích lũy "kinh nghiệm lập luận" liên tục qua thời gian sử dụng thực tế.
 
 ### 6. Ablation Suite tự động & AI Evaluation
-*   **Cơ chế Kỹ thuật:** Tích hợp bộ khung thực nghiệm **Controlled Experimentation**. Sử dụng 8 chiến lược truy xuất từ *Baseline* đến *Hybrid-Learned* làm các biến số độc lập. Đánh giá dựa trên mô hình **LLM-as-a-judge** (DeepEval) với cơ chế CoT (Chain-of-Thought) để đảm bảo tính khách quan và minh bạch của điểm số.
-*   **Lý luận Khoa học:** Áp dụng phương pháp luận **Empirical Software Engineering**. Việc đo lường Faithfulness và Contextual Precision một cách tự động giúp loại bỏ sự chủ quan của con người và cung cấp các bằng chứng thống kê (Statistical Significance) cho nghiên cứu.
-*   **Tác động:** Cung cấp cơ sở dữ liệu thực nghiệm vững chắc, giúp khẳng định sự đóng góp của từng thành phần trong hệ thống đối với hiệu suất tổng thể.
+*   **Cơ chế Kỹ thuật Chuyên sâu:** 
+    *   **Ablation Matrix:** Triển khai một khung thực nghiệm kiểm soát (Controlled Experimentation) với ma trận 8 chiến lược truy xuất độc lập (từ Baseline đến Hybrid-Learned). Mỗi chiến lược được cô lập hóa để đo lường chính xác tác động của từng module (Vector, Graph, Ontology) đối với kết quả cuối cùng.
+    *   **G-Eval Protocol:** Sử dụng quy trình chấm điểm **Chain-of-Thought (CoT)** tích hợp trong DeepEval. Thay vì trả về một điểm số đơn thuần, "Giám khảo AI" được yêu cầu thực hiện bước lập luận trung gian (Intermediate Reasoning) để giải thích lý do cho điểm số đó, sau đó mới ánh xạ vào thang điểm chuẩn hóa.
+*   **Lý luận Khoa học:** Áp dụng phương pháp luận **Empirical Software Engineering** vào nghiên cứu AI. Việc đo lường các chỉ số như *Faithfulness* và *Contextual Precision* một cách tự động và minh bạch giúp loại bỏ hoàn toàn sự chủ quan của con người, cung cấp các bằng chứng thống kê (Statistical Significance) có độ tin cậy cao cho các báo cáo khoa học.
+*   **Tác động:** Cung cấp một bộ cơ sở dữ liệu thực nghiệm "vững như bàn thạch", cho phép nhà nghiên cứu chứng minh và bảo vệ đóng góp khoa học của mình một cách thuyết phục trước bất kỳ hội đồng phản biện khắt khe nào.
+
+## 14. ĐỀ XUẤT CẢI TIẾN & ĐÓNG GÓP KHOA HỌC CHO CÔNG BỐ Q1
+Để đạt được tiêu chuẩn công bố trên các tạp chí Q1 (như Nature Machine Intelligence, JMLR, hay các hội nghị hàng đầu như NeurIPS, ICML), dự án cần tập trung vào các đóng góp lý thuyết sau:
+
+1.  **Formalizing Entropy-based Pruning Framework:** Xây dựng khung lý thuyết toán học chứng minh việc sử dụng hàm Surprisal giúp cực đại hóa *Mutual Information* giữa Ngữ cảnh truy xuất và Câu trả lời cuối cùng, đồng thời tối ưu hóa giới hạn *Information Bottleneck*.
+2.  **Neuro-Symbolic Knowledge Consistency:** Phát triển module kiểm tra tính nhất quán (Truth Maintenance System) cho đồ thị tri thức. Đề xuất một giải thuật cho phép Agent tự phân xử và cập nhật tri thức khi phát hiện mâu thuẫn giữa thông tin mới nạp và bộ nhớ dài hạn sẵn có.
+3.  **Reasoning Latent Space Regularization:** Đề xuất một phương pháp điều chỉnh (Regularization) không gian tiềm ẩn để đảm bảo các "Prototypical Memories" có tính phân tách cao, giúp tăng cường độ tin cậy của các chuỗi lập luận đa bước (Robustness in Multi-hop Reasoning).
+
+## 15. FUTURE WORK: TẦM NHÌN DÀI HẠN
+
+1.  **Cơ chế "Quên" nhận thức (Cognitive Forgetting):** Nghiên cứu giải thuật cắt tỉa đồ thị dựa trên tần suất và trọng số sử dụng tri thức, mô phỏng cơ chế loại bỏ thông tin dư thừa của não bộ để duy trì hiệu năng hệ thống vĩnh viễn.
+2.  **Multi-modal Long-term Memory:** Mở rộng kiến trúc DualMemoryKG để tích hợp tri thức từ hình ảnh, video và dữ liệu cảm biến, hướng tới xây dựng một hệ thống RAG đa phương thức toàn diện.
+3.  **Multi-Agent Collaborative Memory:** Phát triển giao thức chia sẻ tri thức giữa mạng lưới các Agent, cho phép cộng tác lập luận trên một đồ thị tri thức phân tán quy mô lớn.
+4.  **Green AI Optimization:** Tối ưu hóa hiệu năng tính toán và lượng Token tiêu thụ, hướng tới việc xây dựng các Agent thông minh nhưng có chi phí vận hành thấp và thân thiện với môi trường.
 
 ---
 **Tóm tắt giá trị khoa học:** Hệ thống không chỉ là một công cụ truy xuất thông tin, mà là một thực thể học tập liên tục, kết hợp giữa toán học (Information Theory) và khoa học nhận thức (Dual Memory).
