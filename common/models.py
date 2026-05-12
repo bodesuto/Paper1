@@ -1,3 +1,4 @@
+from functools import lru_cache
 from langchain_google_genai import (
     ChatGoogleGenerativeAI,
     GoogleGenerativeAIEmbeddings,
@@ -12,6 +13,7 @@ from .config import GEMINI_MODEL_NAME, GEMINI_EMBEDDING_MODEL
 from .env_setup import apply_env
 from .observability import build_callbacks
 
+@lru_cache(maxsize=1)
 def get_llm():
     apply_env()
     callbacks = build_callbacks()
@@ -39,6 +41,7 @@ def get_llm_with_trace(trace_handler: BaseCallbackHandler):
     return llm
 
 
+@lru_cache(maxsize=1)
 def get_embeddings():
     apply_env()
     return GoogleGenerativeAIEmbeddings(model=GEMINI_EMBEDDING_MODEL)

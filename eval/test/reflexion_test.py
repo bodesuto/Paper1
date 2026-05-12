@@ -5,7 +5,7 @@ import time
 
 import pandas as pd
 from agents.src.reflexion import reflexion_agent_run
-from agents.src.react import creat_react_agent, tool_calls
+from agents.src.react import create_react_agent, get_tool_calls, clear_tool_calls
 from common.config import RETRIEVAL_STRATEGY
 from common.env_setup import apply_env
 from common.models import get_llm_with_trace
@@ -58,10 +58,10 @@ def test(data_path: str | Path, output_path: str | Path):
     SAVE_PATH = Path(output_path)
     
     for i, row in df_bridge.iterrows():
-        tool_calls.clear()
+        clear_tool_calls()
         expected_output = row["answer"]
         question = row["question"]
-        agent = creat_react_agent(llm=get_llm_with_trace(trace_handler))
+        agent = create_react_agent(llm=get_llm_with_trace(trace_handler))
         with get_usage_callback() as cb:
             agent_start = time.perf_counter()
             actual_answer, _ = reflexion_agent_run(question, examples=react_examples, trace_handler=trace_handler, llm=get_llm_with_trace(trace_handler), agent=agent)
@@ -74,14 +74,15 @@ def test(data_path: str | Path, output_path: str | Path):
             success += int(is_exact)
             total += 1
 
-            bad_calls = [c for c in tool_calls if is_bad_call(c)]
+            current_tool_calls = get_tool_calls()
+            bad_calls = [c for c in current_tool_calls if is_bad_call(c)]
 
             # Build test case for all metrics
             test_case = build_test_case(
                 question=question,
                 gold_answer=expected_output,
                 actual_answer=actual_answer,
-                tool_calls=tool_calls,
+                tool_calls=current_tool_calls,
                 trace_text=trace_text,
             )
 
@@ -105,7 +106,7 @@ def test(data_path: str | Path, output_path: str | Path):
                 "exact_match_eval_success": exact_match_score.success,
                 "exact_match_reason": exact_match_score.reason,
                 "bad_calls": len(bad_calls),
-                "total_calls": len(tool_calls),
+                "total_calls": len(current_tool_calls),
                 "agent_latency_s": agent_end - agent_start,
                 # Token usage
                 "prompt_tokens": cb.prompt_tokens,
@@ -157,12 +158,12 @@ def test_dual_memory(
     exact_match_success = 0
     SAVE_PATH = Path(output_path)
     llm = get_llm_with_trace(trace_handler)
-    agent = creat_react_agent(llm=llm)
+    agent = create_react_agent(llm=llm)
     with get_database_session() as session:
         iterator = df_bridge.iterrows() if row_limit is None else df_bridge.head(row_limit).iterrows()
         for i, row in iterator:
-            # Clear global tool_calls before each run
-            tool_calls.clear()
+            # Clear thread-local tool_calls before each run
+            clear_tool_calls()
             expected_output = row["answer"]
             question = row["question"]
             
@@ -178,7 +179,6 @@ def test_dual_memory(
             
             with get_usage_callback() as cb:
                 agent_start = time.perf_counter()
-                # Create agent for this iteration with memory-augmented examples
                 
                 actual_answer, debug_info = reflexion_agent_run(
                     question,
@@ -196,14 +196,15 @@ def test_dual_memory(
                 success += int(is_exact)
                 total += 1
 
-                bad_calls = [c for c in tool_calls if is_bad_call(c)]
+                current_tool_calls = get_tool_calls()
+                bad_calls = [c for c in current_tool_calls if is_bad_call(c)]
 
                 # Build test case for all metrics
                 test_case = build_test_case(
                     question=question,
                     gold_answer=expected_output,
                     actual_answer=actual_answer,
-                    tool_calls=tool_calls,
+                    tool_calls=current_tool_calls,
                     trace_text=trace_text,
                     retrieval_path=selected_path,
                     memory_payload=experience_examples,
@@ -225,7 +226,7 @@ def test_dual_memory(
                     answer=actual_answer,
                     retrieval_path=selected_path,
                     memory_payload=experience_examples,
-                    tool_calls=tool_calls,
+                    tool_calls=current_tool_calls,
                 )
 
                 results.append({
@@ -237,14 +238,14 @@ def test_dual_memory(
                     "exact_match_eval": exact_match_score.score,
                     "exact_match_eval_success": exact_match_score.success,
                     "bad_calls": len(bad_calls),
-                    "total_calls": len(tool_calls),
+                    "total_calls": len(current_tool_calls),
                     # Latencies
                     "memory_latency_s": mem_end - mem_start,
                     "agent_latency_s": agent_end - agent_start,
                     "total_latency_s": (mem_end - mem_start) + (agent_end - agent_start),
                     "retrieval_strategy": memory_bundle.strategy,
                     "retrieved_node_ids": json.dumps(memory_bundle.selected_node_ids(), ensure_ascii=False),
-                    "retrieved_memory_types": json.dumps(memory_bundle.selected_memory_types(), ensure_ascii=False),
+                    "get_tool_calls()": json.dumps(memory_bundle.selected_memory_types(), ensure_ascii=False),
                     "retrieval_path": json.dumps(selected_path, ensure_ascii=False),
                     "candidate_node_ids": json.dumps([node.node_id for node in memory_bundle.nodes if node.node_id], ensure_ascii=False),
                     "candidate_memory_types": json.dumps(memory_bundle.memory_types(), ensure_ascii=False),

@@ -14,7 +14,24 @@ from ..prompts.hotpot_prompts import react_prompt
 from .memory_prompt_formatter import format_memory_payload
 
 
+import threading
+
 logger = get_logger(__name__)
+
+# Use thread-local storage for tool calls to ensure thread safety in production
+_thread_local = threading.local()
+
+def _get_tool_calls_buffer():
+    if not hasattr(_thread_local, "tool_calls"):
+        _thread_local.tool_calls = []
+    return _thread_local.tool_calls
+
+def clear_tool_calls():
+    _thread_local.tool_calls = []
+
+def get_tool_calls():
+    return list(_get_tool_calls_buffer())
+
 
 
 wiki_api = WikipediaAPIWrapper(
@@ -23,7 +40,7 @@ wiki_api = WikipediaAPIWrapper(
     doc_content_chars_max=2000    # limit to 2000 chars per doc
 )
 
-tool_calls = []  # global list
+# Removed global tool_calls for thread safety
 
 
 def format_examples(examples) -> str:
@@ -41,7 +58,7 @@ def search_wikipedia(entity: str) -> str:
     except Exception as e:
         result = f"Search error for '{entity}': {e}"
 
-    tool_calls.append(
+    _get_tool_calls_buffer().append(
         {
             "name": "search_wikipedia",
             "input": {"entity": entity},
@@ -62,7 +79,7 @@ def lookup_keyword(keyword: str) -> str:
     except Exception as e:
         result = f"Lookup error for '{keyword}': {e}"
 
-    tool_calls.append(
+    _get_tool_calls_buffer().append(
         {
             "name": "lookup_keyword",
             "input": {"keyword": keyword},
@@ -72,7 +89,7 @@ def lookup_keyword(keyword: str) -> str:
     return result
 
 
-def creat_react_agent(prompt: str = react_prompt, llm=None):
+def create_react_agent(prompt: str = react_prompt, llm=None):
     """
     Create and return a ReAct agent.
     
@@ -109,4 +126,4 @@ def creat_react_agent(prompt: str = react_prompt, llm=None):
     return agent
 
 
-__all__ = ["creat_react_agent", "search_wikipedia", "lookup_keyword", "tool_calls", "format_examples"]
+__all__ = ["create_react_agent", "search_wikipedia", "lookup_keyword", "get_tool_calls", "clear_tool_calls", "format_examples"]

@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from agents.prompts.hotpot_examples import react_examples
-from agents.src.react import creat_react_agent, format_examples, tool_calls
+from agents.src.react import create_react_agent, format_examples, clear_tool_calls, get_tool_calls
 from common.logger import get_logger
 
 
@@ -46,11 +46,11 @@ def main():
     df = pd.read_csv(data_path).head(args.limit)
     logger.info("Loaded %d rows from %s", len(df), data_path)
 
-    agent = creat_react_agent()
+    agent = create_react_agent()
     results = []
 
     for i, row in df.iterrows():
-        tool_calls.clear()
+        clear_tool_calls()
         question = row["question"]
         gold_answer = row.get("answer", "")
 
@@ -68,8 +68,8 @@ def main():
             "predicted_answer": predicted,
             "matched_substring": matched,
             "latency_s": latency_s,
-            "tool_calls_count": len(tool_calls),
-            "tool_calls_json": json.dumps(tool_calls, ensure_ascii=False),
+            "tool_calls_count": len(get_tool_calls()),
+            "tool_calls_json": json.dumps(get_tool_calls(), ensure_ascii=False),
         }
         results.append(record)
 
@@ -78,7 +78,7 @@ def main():
         print(f"Q: {question}")
         print(f"GOLD: {gold_answer}")
         print(f"PRED: {predicted}")
-        print(f"TOOLS: {len(tool_calls)}")
+        print(f"TOOLS: {len(get_tool_calls())}")
         print(f"LATENCY_S: {latency_s:.2f}")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

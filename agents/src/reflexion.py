@@ -8,7 +8,7 @@ from common.models import get_llm, get_llm_with_trace
 from common.logger import get_logger
 from ..prompts.hotpot_prompts import reflection_prompt
 from ..prompts.hotpot_examples import react_examples
-from .react import creat_react_agent, format_examples, tool_calls
+from .react import create_react_agent, format_examples, clear_tool_calls, get_tool_calls
 
 logger = get_logger(__name__)
 
@@ -50,7 +50,7 @@ def run_react_once(question: str, examples: None, agent, trace_handler):
     # clear previous trace
     trace_handler.trace = ""
     # clear tool_calls as you already do
-    tool_calls.clear()
+    clear_tool_calls()
 
     if examples is None:
         examples = react_examples
@@ -105,7 +105,7 @@ def reflexion_agent_run(question: str, examples, trace_handler=None, llm=None, a
         trace_handler = TraceHandler()
 
     if agent is None:
-        agent = creat_react_agent(llm=get_llm_with_trace(trace_handler))
+        agent = create_react_agent(llm=get_llm_with_trace(trace_handler))
 
     if llm is None:
         llm = get_llm()

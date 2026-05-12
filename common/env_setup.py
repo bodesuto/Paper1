@@ -1,4 +1,5 @@
 import os
+import logging
 from .config import (
     GOOGLE_API_KEY,
     GEMINI_API_KEY,
@@ -25,4 +26,9 @@ def apply_env():
         os.environ["LANGFUSE_ENVIRONMENT"] = LANGFUSE_ENVIRONMENT
     if LANGFUSE_RELEASE:
         os.environ["LANGFUSE_RELEASE"] = LANGFUSE_RELEASE
+    
+    # Silence OpenTelemetry and other noisy exporters
+    logging.getLogger("opentelemetry").setLevel(logging.WARNING)
+    os.environ["OTEL_LOG_LEVEL"] = "error"
+    os.environ["OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"] = "false"
 

@@ -13,6 +13,16 @@ from eval.test.reflexion_test import test as reflexion_test
 from eval.test.reflexion_test import test_dual_memory as reflexion_test_dual_memory
 
 
+def run_test_safe(test_func, data_path, output_file, **kwargs):
+    if Path(output_file).exists():
+        print(f"Skipping {output_file} (already exists)")
+        return
+    print(f"\n>>> Running ablation: {output_file.name}")
+    try:
+        test_func(data_path, output_file, **kwargs)
+    except Exception as e:
+        print(f"FAILED ablation {output_file.name}: {e}")
+
 def main():
     parser = argparse.ArgumentParser(description="Run a compact ablation suite across baseline/heuristic/learned modes.")
     parser.add_argument("--agent", choices=["react", "reflexion"], default="react")
@@ -24,6 +34,7 @@ def main():
         default=ALLOW_TRAIN_EVAL,
         help="Explicitly allow running ablations on a train split. Disabled by default for academic rigor.",
     )
+    parser.add_argument("--limit", type=int, default=None, help="Limit the number of rows to process.")
     args = parser.parse_args()
 
     ensure_heldout_data_path(args.data_path, allow_train_eval=args.allow_train_eval)
@@ -32,26 +43,35 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.agent == "react":
-        react_test(args.data_path, output_dir / "react_baseline.csv")
-        react_test_dual_memory(args.data_path, output_dir / "react_heuristic.csv", retrieval_strategy="heuristic")
-        react_test_dual_memory(args.data_path, output_dir / "react_vector_rag.csv", retrieval_strategy="vector_rag")
-        react_test_dual_memory(args.data_path, output_dir / "react_graph_rag.csv", retrieval_strategy="graph_rag")
-        react_test_dual_memory(args.data_path, output_dir / "react_ontology_only.csv", retrieval_strategy="ontology_only")
-        react_test_dual_memory(args.data_path, output_dir / "react_traversal_only.csv", retrieval_strategy="traversal_only")
-        react_test_dual_memory(args.data_path, output_dir / "react_learned.csv", retrieval_strategy="learned")
+        run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_baseline.csv", retrieval_strategy="baseline", row_limit=args.limit)
+        run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_heuristic.csv", retrieval_strategy="heuristic", row_limit=args.limit)
+        run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_vector_rag.csv", retrieval_strategy="vector_rag", row_limit=args.limit)
+        run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_graph_rag.csv", retrieval_strategy="graph_rag", row_limit=args.limit)
+        run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_ontology_only.csv", retrieval_strategy="ontology_only", row_limit=args.limit)
+        run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_traversal_only.csv", retrieval_strategy="traversal_only", row_limit=args.limit)
+        run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_learned.csv", retrieval_strategy="learned", row_limit=args.limit)
         if Path(TRAVERSAL_POLICY_PATH).exists():
-            react_test_dual_memory(args.data_path, output_dir / "react_full.csv", retrieval_strategy="full")
+            run_test_safe(react_test_dual_memory, args.data_path, output_dir / "react_full.csv", retrieval_strategy="full", row_limit=args.limit)
+        
+        print("\n--- All ReAct ablations triggered. Waiting for cleanup... ---")
+        import time
+        time.sleep(5)
         return
 
-    reflexion_test(args.data_path, output_dir / "reflexion_baseline.csv")
-    reflexion_test_dual_memory(args.data_path, output_dir / "reflexion_heuristic.csv", retrieval_strategy="heuristic")
-    reflexion_test_dual_memory(args.data_path, output_dir / "reflexion_vector_rag.csv", retrieval_strategy="vector_rag")
-    reflexion_test_dual_memory(args.data_path, output_dir / "reflexion_graph_rag.csv", retrieval_strategy="graph_rag")
-    reflexion_test_dual_memory(args.data_path, output_dir / "reflexion_ontology_only.csv", retrieval_strategy="ontology_only")
-    reflexion_test_dual_memory(args.data_path, output_dir / "reflexion_traversal_only.csv", retrieval_strategy="traversal_only")
-    reflexion_test_dual_memory(args.data_path, output_dir / "reflexion_learned.csv", retrieval_strategy="learned")
+    # Same for reflexion
+    run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_baseline.csv", retrieval_strategy="baseline", row_limit=args.limit)
+    run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_heuristic.csv", retrieval_strategy="heuristic", row_limit=args.limit)
+    run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_vector_rag.csv", retrieval_strategy="vector_rag", row_limit=args.limit)
+    run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_graph_rag.csv", retrieval_strategy="graph_rag", row_limit=args.limit)
+    run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_ontology_only.csv", retrieval_strategy="ontology_only", row_limit=args.limit)
+    run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_traversal_only.csv", retrieval_strategy="traversal_only", row_limit=args.limit)
+    run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_learned.csv", retrieval_strategy="learned", row_limit=args.limit)
     if Path(TRAVERSAL_POLICY_PATH).exists():
-        reflexion_test_dual_memory(args.data_path, output_dir / "reflexion_full.csv", retrieval_strategy="full")
+        run_test_safe(reflexion_test_dual_memory, args.data_path, output_dir / "reflexion_full.csv", retrieval_strategy="full", row_limit=args.limit)
+
+    print("\n--- All Reflexion ablations triggered. Waiting for cleanup... ---")
+    import time
+    time.sleep(5)
 
 
 if __name__ == "__main__":

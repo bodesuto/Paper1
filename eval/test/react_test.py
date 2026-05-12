@@ -4,7 +4,7 @@ import time
 
 from neo4j import GraphDatabase
 import pandas as pd
-from agents.src.react import creat_react_agent, format_examples, tool_calls
+from agents.src.react import create_react_agent, format_examples, get_tool_calls, clear_tool_calls
 from common.config import RETRIEVAL_STRATEGY
 from common.env_setup import apply_env
 from common.models import get_llm_with_trace
@@ -34,7 +34,7 @@ def train(data_path: str | Path):
     print(f"Loaded data from {data_path} (length: {len(df_bridge)})")
 
      # Replace with actual trace handler if available
-    agent = creat_react_agent()  # Pass None or a trace handler if
+    agent = create_react_agent()  # Pass None or a trace handler if
 
     for _, row in df_bridge.iterrows():
         question = row["question"]
@@ -55,7 +55,7 @@ def test(data_path: str | Path, output_path: str | Path):
     print(f"Loaded data from {data_path} (length: {len(df_bridge)})")
 
     trace_handler = FullReActTrace() 
-    agent = creat_react_agent(llm=get_llm_with_trace(trace_handler))  # Pass trace handler to get_llm_with_trace
+    agent = create_react_agent(llm=get_llm_with_trace(trace_handler))  # Pass trace handler to get_llm_with_trace
 
     results = []
     total = 0
@@ -64,8 +64,8 @@ def test(data_path: str | Path, output_path: str | Path):
     SAVE_PATH = Path(output_path)
     
     for i, row in df_bridge.iterrows():
-        # Clear global tool_calls before each run
-        tool_calls.clear()
+        # Clear thread-local tool_calls before each run
+        clear_tool_calls()
         expected_output = row["answer"]
         question = row["question"]
         with get_usage_callback() as cb:
@@ -83,14 +83,15 @@ def test(data_path: str | Path, output_path: str | Path):
             success += int(is_exact)
             total += 1
 
-            bad_calls = [c for c in tool_calls if is_bad_call(c)]
+            current_tool_calls = get_tool_calls()
+            bad_calls = [c for c in current_tool_calls if is_bad_call(c)]
 
             # Build test case for all metrics
             test_case = build_test_case(
                 question=question,
                 gold_answer=expected_output,
                 actual_answer=actual_answer,
-                tool_calls=tool_calls,
+                tool_calls=current_tool_calls,
                 trace_text=trace_text,
             )
 
@@ -114,7 +115,7 @@ def test(data_path: str | Path, output_path: str | Path):
                 "exact_match_eval": exact_match_score.score,
                 "exact_match_eval_success": exact_match_score.success,
                 "bad_calls": len(bad_calls),
-                "total_calls": len(tool_calls),
+                "total_calls": len(current_tool_calls),
                 "agent_latency_s": agent_end - agent_start,
                 # Token usage
                 "prompt_tokens": cb.prompt_tokens,
@@ -158,7 +159,7 @@ def test_dual_memory(
     print(f"Loaded data from {data_path} (length: {len(df_bridge)})")
 
     trace_handler = FullReActTrace() 
-    agent = creat_react_agent(llm=get_llm_with_trace(trace_handler))  # Pass trace handler to get_llm_with_trace
+    agent = create_react_agent(llm=get_llm_with_trace(trace_handler))  # Pass trace handler to get_llm_with_trace
 
     results = []
     total = 0
@@ -168,8 +169,8 @@ def test_dual_memory(
     with get_database_session() as session:
         iterator = df_bridge.iterrows() if row_limit is None else df_bridge.head(row_limit).iterrows()
         for i, row in iterator:
-            # Clear global tool_calls before each run
-            tool_calls.clear()
+            # Clear thread-local tool_calls before each run
+            clear_tool_calls()
             expected_output = row["answer"]
             question = row["question"]
             mem_start = time.perf_counter()
@@ -195,14 +196,15 @@ def test_dual_memory(
                 success += int(is_exact)
                 total += 1
 
-                bad_calls = [c for c in tool_calls if is_bad_call(c)]
+                current_tool_calls = get_tool_calls()
+                bad_calls = [c for c in current_tool_calls if is_bad_call(c)]
 
                 # Build test case for all metrics
                 test_case = build_test_case(
                     question=question,
                     gold_answer=expected_output,
                     actual_answer=actual_answer,
-                    tool_calls=tool_calls,
+                    tool_calls=current_tool_calls,
                     trace_text=trace_text,
                     retrieval_path=selected_path,
                     memory_payload=experience_examples,
@@ -224,7 +226,7 @@ def test_dual_memory(
                     answer=actual_answer,
                     retrieval_path=selected_path,
                     memory_payload=experience_examples,
-                    tool_calls=tool_calls,
+                    tool_calls=current_tool_calls,
                 )
 
                 results.append({
@@ -236,7 +238,7 @@ def test_dual_memory(
                     "exact_match_eval": exact_match_score.score,
                     "exact_match_eval_success": exact_match_score.success,
                     "bad_calls": len(bad_calls),
-                    "total_calls": len(tool_calls),
+                    "total_calls": len(current_tool_calls),
                     # Latencies
                     "memory_latency_s": mem_end - mem_start,
                     "agent_latency_s": agent_end - agent_start,
