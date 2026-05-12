@@ -160,6 +160,14 @@ Sử dụng bộ chỉ số tiêu chuẩn từ DeepEval để đảm bảo tính
 2.  **Sự phụ thuộc vào AI-as-a-judge (The Evaluation Bias):** Việc sử dụng DeepEval/Gemini làm giám khảo mang lại hiệu năng cao nhưng tiềm ẩn rủi ro về định kiến mô hình (Model Bias). Một đợt kiểm chứng chéo (Cross-validation) với sự tham gia của các chuyên gia con người (Human-in-the-loop) trên một tập mẫu là điều kiện bắt buộc để bảo vệ kết quả trước hội đồng phản biện.
 3.  **Điểm nghẽn Dữ liệu Đồ thị (Data Ingestion Bottleneck):** Sức mạnh của Graph Retrieval phụ thuộc hoàn toàn vào độ đậm đặc và chất lượng của Ontology. Hiện tại, đồ thị tri thức đang ở giai đoạn sơ khởi; việc làm giàu tri thức chuyên sâu là ưu tiên hàng đầu để chứng minh tính ưu việt của giải thuật Duyệt đồ thị đa bậc (Multi-hop Traversal).
 
+## 18. CHIẾN LƯỢC TRIỂN KHAI THỰC TẾ & GIẢI QUYẾT TRADE-OFF (PRODUCTION READINESS)
+Dự án DualMemoryKG thừa nhận sự tồn tại của bài toán đánh đổi (Trade-off) giữa độ phức tạp của lập luận và độ trễ (Latency) trong môi trường sản xuất. Chúng tôi đề xuất kiến trúc **DualMemory-Production (DMP)** để tối ưu hóa:
+
+1.  **Speculative Execution (Thực thi đầu cơ):** Chạy song song cơ chế truy xuất nhanh (Vector RAG) và truy xuất sâu (Agentic Graph RAG). Hệ thống ưu tiên phản hồi tức thì nếu độ tự tin của Vector RAG đạt ngưỡng an toàn, đồng thời cập nhật thông tin chuyên sâu từ Agent theo thời gian thực.
+2.  **Reasoning Distillation (Chưng cất tư duy):** Sử dụng các vết tích lập luận (Reasoning Paths) đã tích lũy được trong Neo4j để Fine-tune các mô hình nhỏ hơn. Mục tiêu là chuyển đổi từ cơ chế "Tư duy đa bước" tốn kém sang "Truy xuất đường dẫn trực tiếp", giúp giảm Latency xuống mức mili giây.
+3.  **Materialized Reasoning Views:** Tiền xử lý và "phẳng hóa" các cụm quan hệ tri thức nóng trên đồ thị thành các View có sẵn, giúp giảm thiểu độ phức tạp tính toán khi duyệt đồ thị đa bậc (Multi-hop) trong thời gian thực.
+4.  **Streaming Awareness:** Tận dụng cơ chế streaming để hiển thị luồng tư duy (Thought traces) của Agent, giúp cải thiện trải nghiệm người dùng (UX) bằng cách minh bạch hóa quá trình xử lý thay vì để người dùng chờ đợi trong im lặng.
+
 ---
 **Tóm tắt giá trị khoa học:** Hệ thống không chỉ là một công cụ truy xuất thông tin, mà là một thực thể học tập liên tục, kết hợp giữa toán học (Information Theory) và khoa học nhận thức (Dual Memory).
 
