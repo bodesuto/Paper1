@@ -34,7 +34,7 @@ graph TD
 
     subgraph "Reasoning Layer (DualMemoryKG Core)"
         Agent{Grounded Agent}
-        Ontology[Reasoning Ontology $\mathcal{Z}$]
+        Ontology[Reasoning Ontology - Z]
     end
 
     Ingest --> VDB
@@ -51,7 +51,7 @@ The ReAct cycle is augmented with an **Information-Theoretic Gate** that control
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Thought: Receive Query $q$
+    [*] --> Thought: Receive Query
     
     state Thought {
         [*] --> ConceptAlignment
@@ -63,7 +63,7 @@ stateDiagram-v2
     state Action {
         [*] --> VectorSearch
         VectorSearch --> GraphWalk
-        GraphWalk --> Pruning: "Surprisal Penalty $\gamma$"
+        GraphWalk --> Pruning: "Surprisal Penalty"
     }
 
     Action --> Observation: Extract Facts
@@ -76,20 +76,20 @@ stateDiagram-v2
 ```
 
 ### 3. Contrastive Latent Ontology Induction (Feed-forward)
-How behavioral traces $\mathcal{T}$ evolve into stable reasoning prototypes $c_k$.
+How behavioral traces evolve into stable reasoning prototypes.
 
 ```mermaid
 graph LR
-    Traces[Behavioral Traces $\mathcal{T}$] --> Encoder[Trace Encoder]
+    Traces[Behavioral Traces] --> Encoder[Trace Encoder]
     Encoder --> Latent[Latent Space]
     
     subgraph "Contrastive Induction"
         Latent --> Match{Prototype Matching}
         Match -- "Positive" --> Pull[Update Prototypes]
-        Match -- "Negative" --> Push[Repulsion Force $\alpha$]
+        Match -- "Negative" --> Push[Repulsion Force]
     end
     
-    Push & Pull --> Ontology[Dynamic Ontology $\mathcal{Z}$]
+    Push & Pull --> Ontology[Dynamic Ontology]
 ```
 
 ### 4. Deep Error Decomposition (RCA Engine)
@@ -104,16 +104,16 @@ graph TD
     RCA --> E_Gnd["E-Gnd: Hallucination/Grounding Error"]
     
     E_Ont --> Fix_Ont[Update Prototypes]
-    E_Trav --> Fix_Policy[Adjust IG Weight $\beta$]
+    E_Trav --> Fix_Policy[Adjust IG Weight]
     E_Gnd --> Fix_Temp[Reduce LLM Temperature]
 ```
 
 ### 5. End-to-End Grounded Reasoning Pipeline
-The full journey from a raw query $q$ to a mathematically verified answer $y$.
+The full journey from a raw query to a mathematically verified answer.
 
 ```mermaid
 graph TD
-    User([Raw Query $q$]) --> Router{Complexity Router}
+    User([Raw Query]) --> Router{Complexity Router}
     
     subgraph "Phase 1: Knowledge Priming"
         Router -- "Complex" --> InitSearch[Vector Seed Search]
@@ -123,17 +123,17 @@ graph TD
     subgraph "Phase 2: Information-Theoretic Traversal"
         Bridge --> Policy{Traversal Policy}
         Policy --> Explore[Multi-hop Walk]
-        Explore --> Prune{Entropy Pruning $H(x)$}
-        Prune -- "High Surprisal" --> Select[Extract Evidence $\mathcal{P}$]
+        Explore --> Prune{Entropy Pruning}
+        Prune -- "High Surprisal" --> Select[Extract Evidence]
         Prune -- "Redundant" --> Policy
     end
     
     subgraph "Phase 3: Verified Synthesis"
-        Select --> Synthesis[LLM reasoning with $\mathcal{P}$]
-        Synthesis --> Evaluator{Reflexion $Acc_{gnd}$}
+        Select --> Synthesis[LLM reasoning]
+        Synthesis --> Evaluator{Reflexion}
         Evaluator -- "Grounding Fail" --> RCA[Decomposition]
         RCA --> Policy
-        Evaluator -- "Grounding Success" --> Output([Final Verified Answer $y$])
+        Evaluator -- "Grounding Success" --> Output([Final Verified Answer])
     end
 ```
 
