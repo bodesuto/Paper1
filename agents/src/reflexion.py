@@ -9,6 +9,7 @@ from common.logger import get_logger
 from ..prompts.hotpot_prompts import reflection_prompt
 from ..prompts.hotpot_examples import react_examples
 from .react import create_react_agent, format_examples, clear_tool_calls, get_tool_calls
+from core.reasoning_equilibrium import ReasoningEquilibrium
 
 logger = get_logger(__name__)
 
@@ -107,21 +108,28 @@ def reflexion_agent_run(question: str, examples, trace_handler=None, llm=None, a
     if agent is None:
         agent = create_react_agent(llm=get_llm_with_trace(trace_handler))
 
-    if llm is None:
-        llm = get_llm()
-    
     # First attempt
     first_answer, first_trace = run_react_once(question, examples=examples, agent=agent, trace_handler=trace_handler)
     logger.info(f"First attempt answer: {first_answer}")
+    
     reflection = reflect_on_react_run(question, first_answer, first_trace, llm=llm)
     logger.info(f"Reflection:\n{reflection}")
 
-    # Build a modified question that includes the reflection as extra instruction
+    # [Senior Scientist Enhancement]: Active Equilibrium Arbitration
+    arbitrator = ReasoningEquilibrium()
+    # Mock confidence and strength for demonstration (should be tied to LLM logprobs and IG in production)
+    arb_result = arbitrator.arbitrator(first_answer, [first_trace], {"correct": 0.6, "hallucinate": 0.4})
+    
+    logger.info(f"Equilibrium Decision: {arb_result['decision']} (Gap: {arb_result['cognitive_gap']:.4f})")
+    
     reflected_question = (
         question
-        + "\n\n[Reflection Guidance for Agent]\n"
+        + "\n\n[Scientific Equilibrium Guidance]"
+        + f"\nCognitive Conflict Gap: {arb_result['cognitive_gap']:.4f}"
+        + f"\nRecommended Action: {arb_result['decision']}"
+        + "\n\n[Original Reflection Guidance]\n"
         + reflection
-        + "\n\n[End of Reflection Guidance]"
+        + "\n\n[End of Guidance]"
     )
 
     # Second attempt (with reflection-augmented question, same agent)
@@ -134,6 +142,7 @@ def reflexion_agent_run(question: str, examples, trace_handler=None, llm=None, a
         "reflection": reflection,
         "second_answer": second_answer,
         "second_trace": second_trace,
+        "equilibrium_metrics": arb_result
     }
 
     logger.info(f"Final answer: {second_answer}")

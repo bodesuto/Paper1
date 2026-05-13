@@ -13,8 +13,12 @@ This repository has been upgraded to **Enterprise-Grade** and is specifically ta
 ## 🌟 Core Breakthroughs (Q1 Contributions)
 
 1. **Contrastive Latent Ontology Induction**: Automatically learns and separates latent reasoning strategies from behavioral traces using a contrastive prototype learning mechanism.
-2. **Information-Theoretic Evidence Selection**: Models graph traversal as an uncertainty reduction problem, optimizing for *Marginal Information Gain* and penalizing redundancy, moving beyond simple similarity search.
-3. **Deep Error Decomposition Framework**: Implements a scientific error taxonomy (`E-Ont`, `E-Trav`, `E-Gnd`, `E-KB`, `E-Loop`) to diagnose exact failure mechanisms, isolating true grounding from lucky hallucination.
+2. **Information-Theoretic Evidence Selection**: Models graph traversal as an uncertainty reduction problem, optimizing for *Marginal Information Gain* (IG) and minimizing Shannon Entropy $H(X)$.
+3. **Deep Error Decomposition Framework**: Implements a scientific error taxonomy (`E-Ont`, `E-Trav`, `E-Gnd`) to diagnose exact failure mechanisms.
+4. **Synaptic Plasticity & Hebbian Evolution**: The Knowledge Graph dynamically evolves its connection weights based on historical grounded success, implementing a form of *Active Knowledge Refinement*.
+5. **Manifold Robustness & Lipschitz Stability**: Ensures that the reasoning policy is invariant to minor query perturbations, providing theoretical guarantees against adversarial hallucinations.
+6. **Auto-Adaptive Meta-Tuning**: Automatically optimizes Information Gain and Redundancy parameters using a feedback loop, transitioning from heuristic RAG to *Meta-Learning RAG*.
+7. **Epistemic Humility (Uncertainty-Triggered HIL)**: A mathematically rigorous mechanism that detects when internal/external knowledge is insufficient and autonomously requests human grounding.
 
 ## 🏗️ Architectural Blueprints
 

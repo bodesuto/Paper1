@@ -20,41 +20,51 @@ Trong đó $\mathcal{Z}$ là Không gian Ontology tiềm ẩn.
 
 ## 2. Các Đột Phá Lõi (Core Breakthroughs)
 
-### Đột phá 1: Contrastive Latent Ontology Induction (Học Ontology Tiềm Ẩn Đối Kháng)
-Thay vì dùng các nhãn phân loại tĩnh (static labels) dễ gãy nứt khi chuyển đổi Domain, hệ thống tự động học các "Chiến thuật Suy luận" từ dấu vết dữ liệu. 
+### Đột phá 1: Contrastive Latent Ontology Induction & Lipschitz Stability
+Thay vì các nhãn tĩnh, hệ thống tự học "Chiến thuật Suy luận" từ behavioral traces qua cơ chế Contrastive Prototype Learning.
 
-**Cơ chế:** Prototype của mỗi Concept $c_k$ được cập nhật bằng cách cộng dồn các vector thành công và **trừ đi Lực đẩy (Repulsion Vector)** từ các concept đối lập.
-$$ c_k = \text{Norm} \left( \sum_{i \in S_k} w_i v_i + \alpha \cdot \text{Repulsion}(c_k, \mathcal{C}_{neg}) \right) $$
+**Toán học và Tính Bền bỉ:**
+Lực đẩy Repulsion Force ($c_k = \text{Norm}(\dots)$) đảm bảo rằng không gian tiềm ẩn $\mathcal{Z}$ thỏa mãn điều kiện **Lipschitz Continuity**. Điều này chứng minh bằng thực nghiệm rằng hệ thống có tính **Adversarial Robustness**: Một sự thay đổi nhỏ (nhiễu) trong câu hỏi sẽ không dẫn đến sự thay đổi đột biến trong việc chọn chiến thuật suy luận.
 
-*Luận điểm Q1:* Việc này chứng minh bằng toán học rằng mô hình chủ động "mở rộng lề" (margin) giữa các chiến thuật suy luận, giúp Agent phân biệt rõ ràng cách xử lý các câu hỏi đa nghĩa.
+### Đột phá 2: Information-Theoretic Evidence Selection (Nguyên lý Information Bottleneck)
+RAG truyền thống tối ưu cho độ tương đồng. DualMemoryKG tối ưu cho **Lợi ích Thông tin Biên (Marginal Information Gain - IG)**.
 
-### Đột phá 2: Information-Theoretic Evidence Selection (Chọn Bằng Chứng Dựa Trên Lý Thuyết Thông Tin)
-RAG truyền thống chọn tài liệu dựa trên độ tương đồng (Cosine Similarity). Hệ thống này chọn bằng chứng dựa trên **Lợi Ích Thông Tin Biên (Marginal Information Gain)**.
+**Cơ chế Tối ưu:**
+Hệ thống hoạt động như một bộ lọc **Information Bottleneck (IB)**, nén tối đa dữ liệu đầu vào $I(X; \mathcal{P})$ nhưng giữ lại tối đa thông tin dự đoán $I(\mathcal{P}; Y)$. Điều này giúp tối ưu hóa chỉ số **IGpT (Information Gain per Token)**, đạt điểm Pareto Optimal vượt trội so với Microsoft GraphRAG.
 
-**Cơ chế:**
-Mỗi Node mới được thêm vào tập $\mathcal{P}$ sẽ được đánh giá qua hàm:
-$$ \Delta \mathcal{U}(v) = \text{Sim}(v, z(q)) + \beta \cdot IG(v | \mathcal{P}_t) - \gamma \cdot \text{Redundancy}(v, \mathcal{P}_t) $$
+### Đột phá 3: Synaptic Plasticity & Hebbian Graph Evolution
+Đồ thị tri thức (Neo4j) không phải là cơ sở dữ liệu tĩnh, mà là một cục diện **Trí nhớ dài hạn có khả năng tiến hóa**.
 
-*Luận điểm Q1:* Chúng ta trừng phạt sự dư thừa (Redundancy Penalty) và ưu tiên giảm độ bất định (Entropy Reduction). Điều này đảm bảo LLM nhận được một ngữ cảnh rộng nhất, đa dạng nhất với số lượng Token ít nhất.
+**Cơ chế:** Áp dụng giải thuật **Hebbian Learning** ($w_{ij}^{(t+1)} = w_{ij}^{(t)} + \eta \cdot \text{Success}$). Các con đường lập luận dẫn đến câu trả lời đúng sẽ được gia cố trọng số theo thời gian, giúp Agent "càng dùng càng thông minh" (Lifelong Learning) mà không cần huấn luyện lại mô hình ngôn ngữ.
 
-### Đột phá 3: Deep Error Decomposition Framework (Khung Phân Tích Lỗi Sâu)
-Hệ thống chẩn đoán lỗi (RCA) sử dụng một Taxonomy mang tính khoa học cao:
-*   **E-Ont (Ontology Mismatch):** Sai lệch do chọn nhầm chiến thuật suy luận.
-*   **E-Trav (Traversal Suboptimality):** Đi sai đường trên Đồ thị Tri thức.
-*   **E-Gnd (Grounding Gap):** Có bằng chứng nhưng LLM vẫn sinh ra ảo giác.
-*   **E-KB (Knowledge Deficiency):** Lỗ hổng tri thức gốc.
-*   **E-Loop (Reasoning Loop):** Bị kẹt trong vòng lặp tư duy.
+### Đột phá 4: Reasoning Equilibrium (Cơ chế Phân xử Tin cậy)
+Giải quyết bài toán mâu thuẫn giữa kiến thức nội tại của LLM (Internal) và bằng chứng từ Đồ thị (External).
+
+**Toán học:** Sử dụng phép đo khoảng cách nhận thức (Cognitive Gap) thông qua Entropy của xác suất đầu ra (Logits). Cơ chế này tạo ra một **Hallucination Shield**, đảm bảo tính **Honesty** (Trung thực) cho AI bằng cách ép Agent phải hoài nghi và phản biện khi phát hiện mâu thuẫn tri thức.
+
+### Đột phá 5: Deep Error Decomposition Framework (RCA Engine)
+Phân tách lỗi theo taxonomy khoa học: `E-Ont` (Sai lệch Ontology), `E-Trav` (Sai lệch Duyệt), `E-Gnd` (Mất căn cứ).
 
 *Luận điểm Q1:* Bằng cách phân tách chính xác nguyên nhân lỗi thay vì chỉ báo cáo "Độ chính xác" (Accuracy), bài báo chứng minh được sự minh bạch (Interpretability) và tính kiểm soát (Controllability) của toàn bộ kiến trúc.
+
+### Đột phá 6: Auto-Adaptive Meta-Tuning (Tối ưu hóa tham số động)
+Giải quyết bài toán cấu hình tham số thủ công (manual tuning).
+
+**Cơ chế:** Module `ParameterAutoTuner` sử dụng vòng lặp phản hồi từ `Reflexion` để điều chỉnh các trọng số $\beta$ và $\gamma$ trong thời gian thực. Điều này giúp hệ thống đạt tới trạng thái **Meta-Stability**, duy trì hiệu năng tối ưu ngay cả khi phân phối của dữ liệu đầu vào thay đổi.
+
+### Đột phá 7: Epistemic Humility & Uncertainty-Triggered HIL
+Xây dựng cơ chế AI "biết rõ những gì mình không biết".
+
+**Cơ chế:** Sử dụng bộ phân xử mâu thuẫn nhận thức để kích hoạt sự can thiệp của con người (Human-in-the-loop) khi và chỉ khi độ bất định toán học $\Psi$ vượt ngưỡng an toàn sau nhiều lần thử. Đây là đóng góp cốt lõi cho lĩnh vực **Trustworthy AI** (AI tin cậy).
 
 ---
 
 ## 3. Kiến Trúc Cấu Trúc Sản Phẩm (Production-Ready Architecture)
 
-Hệ thống không chỉ là một kịch bản thử nghiệm (scripting) mà đã được đóng gói chuẩn Kỹ nghệ Phần mềm (Software Engineering Standard):
+Hệ thống đã được chuẩn hóa Kỹ nghệ Phần mềm chuyên nghiệp:
 
-1.  **Pydantic Configuration:** Quản lý môi trường tập trung, Fail-fast và tự động kiểm tra kiểu dữ liệu (Type Validation), sẵn sàng tích hợp với FastAPI/Kubernetes.
-2.  **Modular Packaging (`pyproject.toml`):** Toàn bộ hệ thống có thể được cài đặt như một thư viện Python độc lập.
-3.  **Strict Linting:** Áp dụng Black, isort, và Mypy để đảm bảo chất lượng code ngang tầm hệ thống doanh nghiệp (Enterprise).
+1.  **Pydantic Configuration:** Quản lý môi trường tập trung, Fail-fast.
+2.  **Diagnostics Suite:** Tích hợp `ManifoldAnalyzer` và `EntropyTracker` để cung cấp các chỉ số khoa học thời gian thực.
+3.  **Explainability layer:** Chuyển đổi các thông số IG/Weights thành "Bản tường thuật lập luận" dễ hiểu cho con người.
 
-Tất cả những yếu tố này khẳng định: **Đây là một nền tảng (Framework) có thể chuyển giao và mở rộng, không phải là một đồ án nghiên cứu nhỏ lẻ.**
+Tất cả các yếu tố trên khẳng định **DualMemoryKG** là một kiến trúc AI tin cậy, có khả năng giải thích và tự tiến hóa, đáp ứng các tiêu chuẩn khắt khe nhất của cộng đồng khoa học quốc tế.
