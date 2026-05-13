@@ -17,10 +17,14 @@
 *Trọng tâm: Logic điều hướng (Routing Logic)*
 
 1.  **Complexity Classifier (Mô hình phân loại độ khó):**
-    *   Sử dụng Gemini Flash để phân tích câu hỏi trong <500ms.
-    *   **Logic:** 
-        *   `Simple`: 1-hop, thực thể đơn lẻ -> Dùng Vector RAG.
-        *   `Complex`: Multi-hop, quan hệ chồng chéo -> Kích hoạt Dual Memory.
+    *   Sử dụng Gemini Flash để phân tích câu hỏi trong $<500$ ms.
+    *   **Logic rẽ nhánh:**
+```mermaid
+graph LR
+    Q[Query] --> C{Classifier}
+    C -- "1-hop/Simple" --> VRAG[Vector RAG]
+    C -- "Multi-hop/Complex" --> DMRAG[DualMemoryKG]
+```
 2.  **Model Cascading (Phân tầng mô hình):**
     *   Sử dụng Flash cho tất cả các bước trung gian (Trích xuất, Phân tích).
     *   Chỉ dùng Pro cho bước tổng hợp câu trả lời cuối cùng (Final Synthesis).
@@ -29,11 +33,12 @@
 *Trọng tâm: Đóng góp khoa học (Scientific Contribution)*
 
 1.  **Information-Theoretic Evidence Selector:**
-    *   Tính toán **Surprisal (S)** cho từng đoạn văn bản: $S(x) = -\log P(x)$.
-    *   Chỉ chọn các đoạn văn bản có giá trị thông tin cao nhất ($max \Delta I$).
+    *   Tính toán **Surprisal** $S(x)$ cho từng đoạn văn bản:
+    $$ S(x) = -\log_2 P(x \mid q, \mathcal{Z}) $$
+    *   Hệ thống thực hiện cực đại hóa **Marginal Information Gain** $\Delta I$:
+    $$ \Delta I = \max_{v} [ H(\mathcal{P}_t) - H(\mathcal{P}_t \cup \{v\}) ] $$
 2.  **Contextual Pruning:**
-    *   Cắt tỉa các thông tin dư thừa (Redundant nodes) trong đồ thị trước khi nạp vào Prompt.
-    *   **Kết quả dự kiến:** Đạt tới điểm tối ưu trên biểu đồ Accuracy vs. Cost.
+    *   Cắt tỉa các thông tin dư thừa (Redundant nodes) trong đồ thị dựa trên ngưỡng Entropy $\tau$.
 
 ## GIAI ĐOẠN 4: LƯU TRỮ VÀ TÁI SỬ DỤNG (CACHING & PERSISTENCE)
 *Trọng tâm: Hiệu quả dài hạn (Long-term Efficiency)*

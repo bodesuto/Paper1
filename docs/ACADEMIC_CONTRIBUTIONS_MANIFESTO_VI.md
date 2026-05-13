@@ -14,7 +14,28 @@ Sự bùng nổ của các hệ thống RAG (Retrieval-Augmented Generation) và
 
 ---
 
-## 2. Các Đóng góp Khoa học Đột phá (Scientific Breakthroughs)
+## 2. Sơ đồ Chiến lược Giải quyết (Resolution Strategy)
+
+```mermaid
+graph TD
+    subgraph "Research Gaps"
+        G1[Retrieval Gap: Redundancy]
+        G2[Ontology Gap: Hardcoded Rules]
+        G3[Hallucination Gap: Lucky Correctness]
+    end
+
+    subgraph "DualMemoryKG Solutions"
+        S1[Information-Theoretic Control]
+        S2[Contrastive Latent Induction]
+        S3[Deep Error Decomposition]
+    end
+
+    G1 --> S1
+    G2 --> S2
+    G3 --> S3
+```
+
+## 3. Các Đóng góp Khoa học Đột phá (Scientific Breakthroughs)
 
 Để lấp đầy các khoảng trống trên, nghiên cứu này đóng góp 3 đột phá nền tảng:
 
@@ -22,22 +43,21 @@ Sự bùng nổ của các hệ thống RAG (Retrieval-Augmented Generation) và
 **Vấn đề SOTA:** Khái niệm (Concept) để phân loại câu hỏi bị giới hạn bởi từ điển tĩnh.
 **Đột phá:** Nghiên cứu đề xuất một cơ chế tự động học các "Chiến thuật suy luận" từ các vết dữ liệu (reasoning traces). Không gian biểu diễn Ontology được tối ưu thông qua quá trình **Contrastive Learning (Học tương phản)**.
 
-**Lý thuyết Toán học:**
-Mỗi nguyên mẫu khái niệm (Prototype) $c_k$ không chỉ là trung bình của các điểm dữ liệu tích cực, mà bị ép phải dịch chuyển xa khỏi các vùng sai số thông qua Lực đẩy (Repulsion Vector):
-$$ c_k = \text{Norm} \left( \sum_{i \in S_k} w_i v_i + \alpha \sum_{j \neq k} (c_k - c_j) \right) $$
-*Hệ quả khoa học:* Công thức này đảm bảo **Margin (Biên độ quyết định)** giữa các cluster chiến thuật suy luận trong không gian Vector được mở rộng tối đa. Hệ thống sẽ có khả năng tự động "đề kháng" (Robustness) trước các câu hỏi cố tình gây nhiễu, điều mà RAG thông thường không làm được.
+**Định nghĩa Toán học:**
+Mỗi nguyên mẫu khái niệm (Prototype) $c_k$ được cập nhật thông qua quá trình tối ưu hóa biên độ, ép phải dịch chuyển xa khỏi các vùng sai số thông qua Lực đẩy (Repulsion Force):
+$$ c_k = \text{Norm} \left( \sum_{i \in S_k} w_i v_i + \alpha \sum_{j \neq k} \frac{c_k - c_j}{\|c_k - c_j\|^2} \right) $$
+*Hệ quả khoa học:* Công thức này đảm bảo **Margin (Biên độ quyết định)** được mở rộng tối đa, tăng cường tính bền bỉ trước các truy vấn gây nhiễu.
 
 ---
 
 ### Đóng góp 2: Điều khiển Bằng chứng dựa trên Lý thuyết Thông tin (Information-Theoretic Evidence Control)
-**Vấn đề SOTA:** GraphRAG hiện hành duyệt đồ thị theo cấu trúc lân cận (Neighborhood) hoặc độ tương đồng, dẫn đến ngữ cảnh LLM bị nhồi nhét tài liệu rác (Noise insertion).
+**Vấn đề SOTA:** GraphRAG hiện hành duyệt đồ thị theo cấu trúc lân cận, dẫn đến ngữ cảnh LLM bị nhồi nhét tài liệu rác (Noise insertion).
 **Đột phá:** Nghiên cứu này định nghĩa lại quá trình duyệt đồ thị (Graph Traversal) thành một bài toán **Sequential Uncertainty Reduction (Giảm độ bất định chuỗi)**.
 
-**Lý thuyết Toán học:**
+**Định nghĩa Toán học:**
 Tại mỗi bước duyệt đồ thị, một node $v$ chỉ được đưa vào tập bằng chứng $\mathcal{P}_t$ nếu nó tối đa hóa hàm Hữu dụng Biên (Marginal Utility):
-$$ \Delta \mathcal{U}(v) = \text{Sim}(v, z(q)) + \beta \cdot IG(v | \mathcal{P}_t) - \gamma \cdot \text{Redundancy}(v, \mathcal{P}_t) $$
-Trong đó, **Marginal Information Gain ($IG$)** đo lường lượng "thông tin mới" mà $v$ mang lại. Đồng thời, hàm **Phạt dư thừa (Redundancy Penalty)** $\gamma$ chặn đứng việc lấy các tài liệu có chung Concept với các tài liệu đã được chọn trước đó.
-*Hệ quả khoa học:* Đây là bước nhảy vọt từ "Tìm kiếm thông tin" sang "Điều khiển thông tin". Nó tối ưu hóa trực tiếp băng thông (Context Window) của LLM.
+$$ \Delta \mathcal{U}(v) = \text{Sim}(v, \mathcal{Z}(q)) + \beta \cdot IG(v \mid \mathcal{P}_t) - \gamma \cdot \text{Redundancy}(v, \mathcal{P}_t) $$
+Trong đó, **Marginal Information Gain ($IG$)** đo lường sự giảm Entropy $H(\text{Path} \mid \mathcal{P}_t)$.
 
 ---
 
@@ -46,9 +66,9 @@ Trong đó, **Marginal Information Gain ($IG$)** đo lường lượng "thông t
 **Đột phá:** Nghiên cứu đưa ra cơ chế phân tích lỗi **Deep Error Decomposition**, chia tách thành các nhóm lỗi gốc ($E_{Ont}$, $E_{Trav}$, $E_{Gnd}$). 
 
 **Lý thuyết Xác suất:**
-Nghiên cứu chứng minh rằng Xác suất trả lời đúng $P(Y_{correct})$ là một thước đo đánh lừa. Chúng ta cô lập thành công do may mắn (Hallucination Success):
-$$ P(Y_{correct} | \neg S_{grounded}) $$
-*Hệ quả khoa học:* Nghiên cứu khẳng định **Grounding Precision ($Prec_{gnd}$)** mới là thước đo cốt lõi đánh giá chất lượng kiến trúc. Một mô hình có $Prec_{gnd}$ cao là một mô hình có tính xác định (Deterministic), an toàn tuyệt đối cho các hệ thống doanh nghiệp lõi (Mission-critical systems) như Y tế hay Tài chính.
+Cô lập thành công do may mắn (Hallucination Success) thông qua việc phân rã xác suất đúng $P(Y=1)$:
+$$ P(Y=1) = P(Y=1 \mid S_{grounded})P(S_{grounded}) + P(Y=1 \mid \neg S_{grounded})P(\neg S_{grounded}) $$
+*Hệ quả khoa học:* Khẳng định **Grounding Precision ($Prec_{gnd}$)** là thước đo thực sự về tính xác định và độ tin cậy của hệ thống.
 
 ---
 

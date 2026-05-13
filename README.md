@@ -16,6 +16,127 @@ This repository has been upgraded to **Enterprise-Grade** and is specifically ta
 2. **Information-Theoretic Evidence Selection**: Models graph traversal as an uncertainty reduction problem, optimizing for *Marginal Information Gain* and penalizing redundancy, moving beyond simple similarity search.
 3. **Deep Error Decomposition Framework**: Implements a scientific error taxonomy (`E-Ont`, `E-Trav`, `E-Gnd`, `E-KB`, `E-Loop`) to diagnose exact failure mechanisms, isolating true grounding from lucky hallucination.
 
+## 🏗️ Architectural Blueprints
+
+### 1. Macro-Architecture: The Knowledge Bridge
+This diagram illustrates the separation between Continuous (Semantic) and Discrete (Symbolic) memory layers, synchronized by the Reasoning Ontology.
+
+```mermaid
+graph TD
+    subgraph "Domain Layer (External)"
+        D[Raw Data/Docs] --> Ingest[Ingestion Engine]
+    end
+
+    subgraph "Memory Layer (Dual Memory)"
+        VDB[(ChromaDB: Vector Space)]
+        KG[(Neo4j: Symbolic Space)]
+    end
+
+    subgraph "Reasoning Layer (DualMemoryKG Core)"
+        Agent{Grounded Agent}
+        Ontology[Reasoning Ontology $\mathcal{Z}$]
+    end
+
+    Ingest --> VDB
+    Ingest --> KG
+    
+    Agent <--> VDB
+    Agent <--> KG
+    Agent --> Ontology
+    Ontology -- "Refines Policy" --> Agent
+```
+
+### 2. Uncertainty-Aware Reasoning Loop
+The ReAct cycle is augmented with an **Information-Theoretic Gate** that controls evidence acquisition based on Surprisal.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Thought: Receive Query $q$
+    
+    state Thought {
+        [*] --> ConceptAlignment
+        ConceptAlignment --> RetrievalPlan
+    }
+
+    Thought --> Action: Retrieve Evidence
+    
+    state Action {
+        [*] --> VectorSearch
+        VectorSearch --> GraphWalk
+        GraphWalk --> Pruning: "Surprisal Penalty $\gamma$"
+    }
+
+    Action --> Observation: Extract Facts
+    Observation --> Validation: "Faithfulness Check"
+    
+    Validation --> Thought: "Low Confidence"
+    Validation --> FinalAnswer: "Entropy Threshold Met"
+    
+    FinalAnswer --> [*]
+```
+
+### 3. Contrastive Latent Ontology Induction (Feed-forward)
+How behavioral traces $\mathcal{T}$ evolve into stable reasoning prototypes $c_k$.
+
+```mermaid
+graph LR
+    Traces[Behavioral Traces $\mathcal{T}$] --> Encoder[Trace Encoder]
+    Encoder --> Latent[Latent Space]
+    
+    subgraph "Contrastive Induction"
+        Latent --> Match{Prototype Matching}
+        Match -- "Positive" --> Pull[Update Prototypes]
+        Match -- "Negative" --> Push[Repulsion Force $\alpha$]
+    end
+    
+    Push & Pull --> Ontology[Dynamic Ontology $\mathcal{Z}$]
+```
+
+### 4. Deep Error Decomposition (RCA Engine)
+The scientific diagnostic flow used to prove the **Grounding Objective**.
+
+```mermaid
+graph TD
+    Fail[System Failure] --> RCA{Diagnostic Engine}
+    
+    RCA --> E_Ont["E-Ont: Ontology Misalignment"]
+    RCA --> E_Trav["E-Trav: Traversal Gap"]
+    RCA --> E_Gnd["E-Gnd: Hallucination/Grounding Error"]
+    
+    E_Ont --> Fix_Ont[Update Prototypes]
+    E_Trav --> Fix_Policy[Adjust IG Weight $\beta$]
+    E_Gnd --> Fix_Temp[Reduce LLM Temperature]
+```
+
+### 5. End-to-End Grounded Reasoning Pipeline
+The full journey from a raw query $q$ to a mathematically verified answer $y$.
+
+```mermaid
+graph TD
+    User([Raw Query $q$]) --> Router{Complexity Router}
+    
+    subgraph "Phase 1: Knowledge Priming"
+        Router -- "Complex" --> InitSearch[Vector Seed Search]
+        InitSearch --> Bridge[KG Entry Points]
+    end
+    
+    subgraph "Phase 2: Information-Theoretic Traversal"
+        Bridge --> Policy{Traversal Policy}
+        Policy --> Explore[Multi-hop Walk]
+        Explore --> Prune{Entropy Pruning $H(x)$}
+        Prune -- "High Surprisal" --> Select[Extract Evidence $\mathcal{P}$]
+        Prune -- "Redundant" --> Policy
+    end
+    
+    subgraph "Phase 3: Verified Synthesis"
+        Select --> Synthesis[LLM reasoning with $\mathcal{P}$]
+        Synthesis --> Evaluator{Reflexion $Acc_{gnd}$}
+        Evaluator -- "Grounding Fail" --> RCA[Decomposition]
+        RCA --> Policy
+        Evaluator -- "Grounding Success" --> Output([Final Verified Answer $y$])
+    end
+```
+
 ## 📁 Repository Structure (Product Standard)
 
 ```text
