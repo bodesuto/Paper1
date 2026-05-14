@@ -1,81 +1,51 @@
-# Hình thức hóa Toán học Kiến trúc DualMemoryKG (Chuẩn Q1)
+# Hình thức hóa Toán học: The Grounded Reasoning Stack (DualMemoryKG)
 
-Tài liệu này cung cấp các công thức nền tảng của hệ thống, được trình bày trực quan với các từ khóa toán học bằng tiếng Anh.
+Tài liệu này hệ thống hóa các nền tảng toán học của hệ thống theo 4 lớp đóng góp khoa học kế thừa.
 
 ---
 
-## 1. Memory Space Definition
+## Lớp 1: Cấu trúc Bộ nhớ Hỗn hợp (Storage Layer)
 
-Hệ thống bộ nhớ kép được biểu diễn là một đồ thị tri thức hỗn hợp **G**:
+**Mục tiêu:** Định nghĩa không gian tri thức tích hợp.
 
 **[Visible Formula]:**
 > **G = (V, E)**
-> Where:
-> - **V (Vertices):** Includes {M_sem, M_obs, C_ont}
-> - **E (Edges):** Includes {R_supp, R_conf, R_link}
+> **V = { M_semantic, M_observability, C_ontology }**
 
-**Giải thích:**
-- **M_sem (Semantic Memory):** Bộ nhớ ngữ nghĩa.
-- **M_obs (Observability Memory):** Bộ nhớ quan sát.
-- **C_ont (Concept Ontology):** Ontology khái niệm.
-
-**[LaTeX Code]:**
-```latex
-\mathcal{G} = (\mathcal{V}, \mathcal{E}) \text{ where } \mathcal{V} = \{M_{sem} \cup M_{obs} \cup C_{ont}\}
-```
+**Giải thích:** Đồ thị tri thức **G** là sự hợp nhất giữa dữ liệu tĩnh và nhật ký thực thi thực tế.
 
 ---
 
-## 2. Evidence Control Optimization Objective
+## Lớp 2: Suy diễn Nhận thức (Perception Layer)
 
-Hàm mục tiêu tối ưu hóa việc lựa chọn bằng chứng:
-
-**[Visible Formula]:**
-> **Utility(E) = α * Support(E) + β * Diversity(E) - γ * Redundancy(E) - δ * Contradiction(E)**
-
-**Giải thích các thành phần:**
-- **Support:** Độ hỗ trợ bằng chứng.
-- **Diversity:** Tính đa dạng.
-- **Redundancy:** Sự dư thừa.
-- **Contradiction:** Sự mâu thuẫn.
-
-**[LaTeX Code]:**
-```latex
-U(E) = \alpha \cdot \text{Supp}(E) + \beta \cdot \text{Div}(E) - \gamma \cdot \text{Red}(E) - \delta \cdot \text{Conf}(E)
-```
-
----
-
-## 3. Prototype Learning Mechanism
-
-Cơ chế học nguyên mẫu để phân loại khái niệm:
+**Mục tiêu:** Tự động nhận diện cấu trúc suy luận từ kinh nghiệm.
 
 **[Visible Formula]:**
 > **P(c_k | x) = Exp(-dist(x, c_k)^2) / Sum[ Exp(-dist(x, c_j)^2) ]**
 
-**Giải thích:**
-- **P (Probability):** Xác suất mẫu x thuộc về khái niệm k.
-- **dist (Distance):** Khoảng cách Euclidean.
-
-**[LaTeX Code]:**
-```latex
-P(c_k | x) = \frac{\exp(-\|f_\phi(x) - c_k\|^2)}{\sum_j \exp(-\|f_\phi(x) - c_j\|^2)}
-```
+**Giải thích:** Xác suất mẫu **x** thuộc về khái niệm **c_k** được tính dựa trên khoảng cách Euclidean trong không gian embedding.
 
 ---
 
-## 4. Lipschitz Stability
+## Lớp 3: Điều khiển tri thức tối ưu (Control Layer)
 
-Đảm bảo tính ổn định của hệ thống trước nhiễu:
+**Mục tiêu:** Lựa chọn bộ bằng chứng tối ưu cho suy luận.
 
 **[Visible Formula]:**
-> **| Result(G_1) - Result(G_2) | ≤ K * dist(G_1, G_2)**
+> **Utility(E) = α * Information_Gain(E) - β * Redundancy(E)**
 
-**Giải thích:**
-- **Result:** Kết quả đầu ra của hệ thống.
-- **K (Lipschitz Constant):** Hằng số ổn định Lipschitz.
+**Giải thích:** Việc chọn bằng chứng được mô hình hóa như một bài toán tối ưu hóa thông tin, cân bằng giữa lượng tin thu được và sự lặp lại.
 
-**[LaTeX Code]:**
-```latex
-\| \mathcal{R}(G_1) - \mathcal{R}(G_2) \| \leq K \cdot d(\mathcal{G}_1, \mathcal{G}_2)
-```
+---
+
+## Lớp 4: Xác thực ổn định (Verification Layer)
+
+**Mục tiêu:** Chứng minh tính tin cậy của hệ thống.
+
+**[Visible Formula]:**
+> **|| Δ_Output || ≤ K * || Δ_Evidence ||**
+
+**Giải thích:** Định lý Lipschitz đảm bảo rằng sai số của câu trả lời được kiểm soát chặt chẽ bởi chất lượng của bằng chứng nạp vào, ngăn chặn ảo giác ngẫu nhiên.
+
+---
+**Kết luận:** Sự mạch lạc toán học nằm ở việc kết quả của Lớp 1 là đầu vào của Lớp 2, Lớp 2 cung cấp ngữ cảnh cho Lớp 3, và Lớp 4 bảo chứng cho toàn bộ quy trình.
