@@ -57,49 +57,57 @@ python scripts/run_react_smoke.py --limit 3
 
 ---
 
-## Bước 5: Chạy thí nghiệm Dual-Memory (Core Research)
+## Bước 5: Thí nghiệm Khoa học Cấp cao (Elite Research Pipeline)
 
-Đây là phần quan trọng nhất để lấy dữ liệu cho bài báo Q1.
+Đây là quy trình tối ưu cho bài báo Q1, kết hợp thực nghiệm Agentic với phân tích lý thuyết hình thức (Information Gain, Lipschitz Constant).
 
 ```bash
-# Chạy ReAct với cơ chế Dual Memory (Knowledge Graph + Learned Ontology)
-python scripts/run_ablation_suite.py --agent react --limit 5
-
-# Chạy Reflexion (có cơ chế tự suy ngẫm)
-python scripts/run_ablation_suite.py --agent reflexion --limit 5
+# Quy trình tự động: Suy luận -> Đo lường IG/Entropy -> Tự học Hebbian
+python scripts/run_elite_pipeline.py --dataset hotpot_qa --limit 50
 ```
 
-*Lưu ý: Bạn có thể bỏ flag `--limit` để chạy toàn bộ dataset khi đã sẵn sàng.*
+Kết quả sẽ được ghi nhận tại `reports/` với các chỉ số sâu về **Reasoning Density** và **Stability**.
 
 ---
 
 ## Bước 6: Phân tích lỗi sâu (RCA Decomposition)
 
-Sau khi có kết quả chạy ở Bước 5, hãy phân loại lỗi để viết phần "Discussion" cho bài báo:
+Sau khi có kết quả, hãy phân loại lỗi theo chuẩn khoa học của chúng ta:
 
 ```bash
-# Tự động phân tích lỗi dựa trên Error Taxonomy (E-Ont, E-Trav, ...)
-python scripts/run_rca_decomposition.py --input eval/data/react_full.csv
+# Tự động phân tích lỗi dựa trên Elite Error Taxonomy (E-Ont, E-Trav, ...)
+python scripts/run_rca_decomposition.py --input reports/temp_results.csv
 ```
 
 ---
 
-## Bước 7: Xem báo cáo tổng hợp
+## Bước 7: Phân tích Manifold & Trực quan hóa
 
-Hệ thống cung cấp một Control Panel giao diện web để bạn theo dõi:
+Để có biểu đồ cho bài báo, hãy kích hoạt bộ phân tích cấu trúc:
 
 ```bash
-# Khởi chạy giao diện quản lý
+# Tính toán hằng số Lipschitz và Silhouette Score cho Latent Ontology
+python -m reasoning_ontology.src.manifold_analysis
+```
+
+---
+
+## 8. Xem báo cáo tổng hợp
+
+Hệ thống cung cấp một Control Panel giao diện web để theo dõi:
+
+```bash
 python -m control_panel.run
 ```
-Sau đó truy cập: `http://localhost:8000` trên trình duyệt.
+Truy cập: `http://localhost:8000`
 
 ---
 
 ## Phụ lục: Các file kết quả quan trọng
-*   `eval/data/*.csv`: Chứa điểm số (Exact Match, Latency, Tool Calls).
-*   `output/*.rca.json`: Chứa kết quả phân tích nguyên nhân lỗi gốc.
-*   `docs/`: Chứa các tài liệu học thuật liên quan.
+*   `reports/ig_reports.csv`: Mật độ lợi ích thông tin (IGpT).
+*   `reports/manifold_stability.json`: Hằng số Lipschitz và độ bền bỉ.
+*   `eval/data/*.csv`: Kết quả EM/F1 và Latency.
+*   `docs/ACADEMIC_FORMALIZATION_Q1.md`: Tài liệu thuyết minh toán học.
 
 ---
-**Chúc bạn có kết quả nghiên cứu tốt!**
+**Chúc bạn có kết quả nghiên cứu đột phá!**
