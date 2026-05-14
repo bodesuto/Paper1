@@ -194,6 +194,43 @@ All detailed academic and technical documentation has been organized in the `doc
 - **Error Diagnostics**: `docs/TROUBLESHOOTING_VI.md`
 - **Reproduction Guide**: `docs/REPRODUCTION_GUIDE_VI.md`
 
+## 6. Master Synthesis Flow: Toàn cảnh luồng tri thức và điều khiển
+
+Sơ đồ này mô tả sự phối hợp giữa 4 tầng của **Grounded Reasoning Stack** (Storage, Induction, Control, Verification) để tạo ra kết quả cuối cùng.
+
+```mermaid
+graph TD
+    %% Layer 1: Unified Substrate
+    subgraph L1 [Tầng 1: Unified Substrate]
+        M_SEM[Semantic Facts] --- GRAPH((Dual-Memory Graph))
+        M_OBS[Observability Traces] --- GRAPH
+    end
+
+    %% Layer 2: Adaptive Induction
+    subgraph L2 [Tầng 2: Adaptive Induction]
+        PATTERN[Trích xuất Pattern] --> MANIFOLD{Manifold Alignment}
+        MANIFOLD --> PROTOTYPE[Prototype Induction]
+    end
+
+    %% Layer 3: Information-Theoretic Control
+    subgraph L3 [Tầng 3: Knowledge Control]
+        SELECTION[Lọc bằng chứng] --> SURPRISAL{Tính Surprisal}
+        SURPRISAL -- "High Gain" --> EVIDENCE[Optimal Evidence Set]
+        SURPRISAL -- "Redundant" --> PRUNE[Pruning]
+    end
+
+    %% Layer 4: Safety Verification
+    subgraph L4 [Tầng 4: Safety Verification]
+        LIPSCHITZ{Lipschitz Barrier} --> VERIFIED[Verified Answer]
+        LIPSCHITZ -- "Variance Too High" --> REJECT[Refusal/Retry]
+    end
+
+    %% The Flow
+    GRAPH --> PATTERN
+    PROTOTYPE --> SELECTION
+    EVIDENCE --> LIPSCHITZ
+```
+
 ---
 
 *This codebase is strictly formatted using `black`, sorted with `isort`, and configured for `mypy` typing to ensure production reliability.*
