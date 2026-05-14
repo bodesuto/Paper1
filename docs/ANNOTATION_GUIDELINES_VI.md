@@ -163,13 +163,13 @@ Nếu có nhiều annotator:
 
 - nên có một tập giao nhau để đo agreement
 
-## 8. Câu viết gợi ý cho paper
+## 8. Câu viết gợi ý cho bài báo (Manuscript Templates)
 
-Bạn có thể viết theo kiểu:
+Bạn có thể viết theo phong cách sau để nhấn mạnh tính khách quan:
 
-> We complement automatic grounding proxies with a manually annotated evidence benchmark. For each example, annotators identify gold supporting nodes, sufficient support sets, and contradiction nodes. This allows us to evaluate not only whether the system answers correctly, but whether it answers with the right evidence.
+> Chúng tôi bổ sung các chỉ số đo lường căn cứ tự động bằng một bộ tiêu chuẩn bằng chứng được gán nhãn thủ công. Đối với mỗi ví dụ, các chuyên gia gán nhãn sẽ xác định các nút bằng chứng chuẩn (gold nodes), các tập hỗ trợ đủ (sufficient sets) và các nút gây mâu thuẫn (contradiction nodes). Quy trình này cho phép chúng tôi đánh giá không chỉ việc hệ thống có trả lời đúng hay không, mà còn việc liệu hệ thống có trả lời dựa trên đúng bằng chứng hay không.
 
-Đây là điểm rất có giá trị học thuật vì nó giúp paper chứng minh:
+Đây là điểm rất có giá trị học thuật vì nó giúp bài báo chứng minh:
 
-- hệ thống đúng vì grounding tốt hơn
-- không chỉ đúng vì model đoán tốt hơn
+- Hệ thống đúng vì khả năng bám sát bằng chứng (grounding) tốt hơn.
+- Sự chính xác không chỉ đến từ khả năng dự đoán ngẫu nhiên của mô hình ngôn ngữ lớn.
