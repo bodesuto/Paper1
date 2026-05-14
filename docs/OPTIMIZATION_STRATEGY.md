@@ -35,7 +35,7 @@ graph LR
 1.  **Information-Theoretic Evidence Selector:**
     *   Tính toán **Surprisal** $S(x)$ cho từng đoạn văn bản:
     $$ S(x) = -\log_2 P(x \mid q, \mathcal{Z}) $$
-    *   Hệ thống thực hiện cực đại hóa **Marginal Information Gain** $\Delta I$:
+    *   Hệ thống thực hiện cực đại hóa **Lợi ích Thông tin Biên (Marginal Information Gain)** $\Delta I$:
     $$ \Delta I = \max_{v} [ H(\mathcal{P}_t) - H(\mathcal{P}_t \cup \{v\}) ] $$
 2.  **Contextual Pruning:**
     *   Cắt tỉa các thông tin dư thừa (Redundant nodes) trong đồ thị dựa trên ngưỡng Entropy $\tau$.

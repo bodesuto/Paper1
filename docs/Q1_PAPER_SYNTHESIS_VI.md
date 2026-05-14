@@ -10,10 +10,10 @@ Tài liệu này tổng hợp toàn bộ các đột phá về mặt **Kiến tr
 Hệ thống của chúng ta giải quyết bài toán: **Domain-Agnostic Grounded Reasoning** (Suy luận có căn cứ độc lập lĩnh vực).
 
 Cho một câu hỏi $q \in \mathcal{Q}$ và một đồ thị tri thức bộ nhớ kép $\mathcal{G} = (\mathcal{V}, \mathcal{E})$. Nhiệm vụ của hệ thống không phải là tìm ra câu trả lời trực tiếp, mà là xác định một **Tập Bằng Chứng (Support Set)** $\mathcal{P} \subseteq \mathcal{V}$ sao cho LLM có thể sinh ra câu trả lời dựa trên $\mathcal{P}$:
-$$ y = f_{LLM}(q, \mathcal{P}) $$
+$$ y = f_{\text{LLM}}(q, \mathcal{P}) $$
 
 Để tránh hiện tượng "Ảo giác" (Hallucination), việc chọn $\mathcal{P}$ được mô hình hóa thành bài toán **Tối ưu hóa Ràng buộc**:
-$$ \max_{\mathcal{P} \subseteq \mathcal{V}} \text{Utility}(\mathcal{P} | q, \mathcal{Z}) - \lambda \cdot \text{Cost}(\mathcal{P}) $$
+$$ \max_{\mathcal{P} \subseteq \mathcal{V}} \left[ \text{Utility}(\mathcal{P} \mid q, \mathcal{Z}) - \lambda \cdot \text{Cost}(\mathcal{P}) \right] $$
 Trong đó $\mathcal{Z}$ là Không gian Ontology tiềm ẩn.
 
 ---
@@ -35,7 +35,7 @@ Hệ thống hoạt động như một bộ lọc **Information Bottleneck (IB)*
 ### Đột phá 3: Synaptic Plasticity & Hebbian Graph Evolution
 Đồ thị tri thức (Neo4j) không phải là cơ sở dữ liệu tĩnh, mà là một cục diện **Trí nhớ dài hạn có khả năng tiến hóa**.
 
-**Cơ chế:** Áp dụng giải thuật **Hebbian Learning** ($w_{ij}^{(t+1)} = w_{ij}^{(t)} + \eta \cdot \text{Success}$). Các con đường lập luận dẫn đến câu trả lời đúng sẽ được gia cố trọng số theo thời gian, giúp Agent "càng dùng càng thông minh" (Lifelong Learning) mà không cần huấn luyện lại mô hình ngôn ngữ.
+**Cơ chế:** Áp dụng giải thuật **Học Hebbian** ($w_{ij}^{(t+1)} = w_{ij}^{(t)} + \eta \cdot \text{Success}$). Các con đường lập luận dẫn đến câu trả lời đúng sẽ được gia cố trọng số theo thời gian, giúp Agent "càng dùng càng thông minh" (Lifelong Learning) mà không cần huấn luyện lại mô hình ngôn ngữ.
 
 ### Đột phá 4: Reasoning Equilibrium (Cơ chế Phân xử Tin cậy)
 Giải quyết bài toán mâu thuẫn giữa kiến thức nội tại của LLM (Internal) và bằng chứng từ Đồ thị (External).

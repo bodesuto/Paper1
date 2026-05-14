@@ -1,85 +1,85 @@
-# Academic Formalization: DualMemoryKG Standard for Q1 Publications
+# Hình thức hóa Học thuật: Tiêu chuẩn DualMemoryKG cho Công bố Q1
 
-This document provides the formal mathematical foundation for the DualMemoryKG framework, specifically targeting requirements for High-Impact (Q1) journals.
+Tài liệu này cung cấp nền tảng toán học hình thức cho khung làm việc DualMemoryKG, tập trung cụ thể vào các yêu cầu của các tạp chí có tác động cao (High-Impact - Q1).
 
 ---
 
-## 1. Theorem: Grounded Convergence (The Hallucination Decay Law)
+## 1. Định lý: Hội tụ có Căn cứ (Định luật Phân rã Ảo giác)
 
-**Theorem 1.** Let $\mathcal{P}_t$ be the set of evidence collected up to step $t$. Under the Information-Theoretic Traversal Policy $\pi_{IG}$, the probability of a hallucinated response $P(E_{hallucinate})$ decays exponentially as the Information Gain (IG) approach the task's intrinsic entropy $H(Q)$.
+**Định lý 1.** Gọi $\mathcal{P}_t$ là tập hợp các bằng chứng được thu thập cho đến bước $t$. Dưới Chiến sách Duyệt đồ thị dựa trên Lý thuyết Thông tin (Information-Theoretic Traversal Policy) $\pi_{\text{IG}}$, xác suất của một phản hồi ảo giác $P(E_{\text{hallucinate}})$ sẽ phân rã theo hàm mũ khi Lợi ích Thông tin (Information Gain - IG) tiệm cận với entropy nội tại của nhiệm vụ $H(Q)$.
 
-**Formal Statement:**
+**Phát biểu Hình thức:**
 $$ P(Y \neq Y^* \mid \mathcal{P}_t) \leq \exp \left( - \lambda \cdot \sum_{i=1}^t \text{IG}(v_i \mid \mathcal{P}_{i-1}) \right) $$
-where $\lambda$ is the *Grounding Constant* specific to the LLM's reasoning density.
+trong đó $\lambda$ là *Hằng số Căn cứ* (Grounding Constant) đặc thù cho mật độ suy luận của LLM.
 
-**Significance:** This theorem transforms "hallucination reduction" from a heuristic claim into a provable convergence property of the architecture.
+**Ý nghĩa:** Định lý này chuyển đổi việc "giảm ảo giác" từ một tuyên bố cảm tính thành một thuộc tính hội tụ có thể chứng minh được của kiến trúc.
 
 ---
 
-## 2. Theoretical Basis: Lipschitz Continuity of Latent Ontology
+## 2. Cơ sở Lý thuyết: Tính liên tục Lipschitz của Ontology Tiềm ẩn
 
-We define the reasoning manifold $\mathcal{M}$ as the embedding space of behavioral traces.
+Chúng tôi định nghĩa đa tạp suy luận $\mathcal{M}$ là không gian nhúng của các dấu vết hành vi (behavioral traces).
 
-**Proposition 1.** The Contrastive Repulsion Force $\alpha$ ensures that the mapping $f: \mathcal{Q} \to \mathcal{Z}$ satisfies the Lipschitz condition:
+**Mệnh đề 1.** Lực đẩy đối kháng (Contrastive Repulsion Force) $\alpha$ đảm bảo rằng ánh xạ $f: \mathcal{Q} \to \mathcal{Z}$ thỏa mãn điều kiện Lipschitz:
 $$ \| f(q_1) - f(q_2) \|_{\mathcal{Z}} \leq L \cdot \| q_1 - q_2 \|_{\mathcal{Q}} $$
-where $L$ is minimized by the cluster margin $\Gamma$.
+trong đó $L$ được cực tiểu hóa bởi biên độ cụm $\Gamma$.
 
-**Impact:** A lower $L$ indicates that the system is robust against adversarial perturbations in the query, ensuring that slight semantic shifts do not lead to catastrophic misclassification of reasoning strategies.
+**Tác động:** Một giá trị $L$ thấp hơn cho thấy hệ thống bền bỉ trước các tác động đối kháng (adversarial robustness) trong câu hỏi, đảm bảo rằng những thay đổi ngữ nghĩa nhỏ không dẫn đến việc phân loại sai nghiêm trọng các chiến lược suy luận.
 
 ---
 
-## 3. Metrics: Knowledge Compression Efficiency (IGpT)
+## 3. Chỉ số: Hiệu quả Nén Tri thức (IGpT)
 
-Traditional RAG systems are inefficient because they optimize for **Similarity** rather than **Utility**. We introduce the **Information Gain per Token (IGpT)** metric:
+Các hệ thống RAG truyền thống thường kém hiệu quả vì chúng tối ưu hóa cho **Độ tương đồng** (Similarity) thay vì **Giá trị hữu dụng** (Utility). Chúng tôi giới thiệu chỉ số **Lợi ích Thông tin trên mỗi Token (Information Gain per Token - IGpT)**:
 
 $$ \text{IGpT} = \frac{\int_{t} \text{IG}(v_t) dt}{\sum \text{Tokens}} $$
 
-**Academic Claim:** DualMemoryKG achieves a superior Pareto Frontier in the Accuracy-vs-Context space by maximizing IG while penalizing redundancy through the $\gamma$ term in our objective function.
+**Tuyên bố Khoa học:** DualMemoryKG đạt được Đường biên Pareto (Pareto Frontier) vượt trội trong không gian Độ chính xác-vs-Ngữ cảnh bằng cách tối đa hóa IG đồng thời phạt sự dư thừa thông qua số hạng $\gamma$ trong hàm mục tiêu của chúng tôi.
 
 ---
 
-## 4. Mechanism: Hebbian Synaptic Plasticity in Graphs
+## 4. Cơ chế: Tính dẻo Synap Hebbian trên Đồ thị
 
-We model the Knowledge Graph not as a static database, but as a **Persistent Memory Manifold**.
+Chúng tôi mô hình hóa Đồ thị Tri thức không phải là một cơ sở dữ liệu tĩnh, mà là một **Đa tạp Bộ nhớ Bền vững** (Persistent Memory Manifold).
 
-**Update Rule (Hebbian):**
+**Quy tắc Cập nhật (Hebbian):**
 $$ w_{ij}^{(t+1)} = w_{ij}^{(t)} + \eta \cdot \mathbb{I}(\text{Success} \mid \text{Edge}_{ij} \in \mathcal{P}) $$
-where $\eta$ is the learning rate and $\mathbb{I}$ is the indicator function of grounded success.
+trong đó $\eta$ là tốc độ học và $\mathbb{I}$ là hàm chỉ thị của sự thành công có căn cứ.
 
-**Resulting Property:** The system exhibits **Collective Intelligence**, where the traversal policy becomes increasingly specialized for the target domain through "Environmental Feedback" rather than expensive re-training.
+**Thuộc tính Hệ quả:** Hệ thống thể hiện **Trí tuệ Tập thể** (Collective Intelligence), trong đó chiến sách duyệt đồ thị ngày càng trở nên chuyên biệt cho miền mục tiêu thông qua "Phản hồi Môi trường" thay vì phải huấn luyện lại (re-training) tốn kém.
 
 ---
 
-## 5. Principle: Information Bottleneck in Agentic Reasoning
+## 5. Nguyên lý: Điểm nghẽn Thông tin trong Suy luận Tác tử
 
-We formalize the reasoning agent as a communication channel between raw memory $X$ and the final answer $Y$. 
+Chúng tôi hình thức hóa tác tử suy luận như một kênh truyền thông giữa bộ nhớ thô $X$ và câu trả lời cuối cùng $Y$. 
 
-**Objective Function (Lagrangian):**
+**Hàm Mục tiêu (Lagrangian):**
 $$ \min_{\mathcal{P}} \left[ I(X; \mathcal{P}) - \beta I(\mathcal{P}; Y) \right] $$
-where $I(X; \mathcal{P})$ is the complexity of the retrieved context and $I(\mathcal{P}; Y)$ is the predictive utility.
+trong đó $I(X; \mathcal{P})$ là độ phức tạp của ngữ cảnh được truy xuất và $I(\mathcal{P}; Y)$ là giá trị hữu dụng dự báo.
 
-**Academic Claim:** DualMemoryKG acts as an optimal filter that discards domain noise while preserving the causal "Invariants" needed for grounded reasoning, effectively reaching the **Sufficient Statistic** limit for the given query.
-
----
-
-## 6. Analysis: Computational Complexity vs. Reasoning Density
-
-We prove that the incremental cost of Information-Theoretic selection is negligible compared to the reduction in LLM inference costs.
-
-**Complexity:**
-The traversal policy operates in $O(T \cdot K \cdot \log V)$, where $T$ is the reasoning hops, $K$ is the branching factor, and $V$ is the vertex count. 
-
-**Efficiency Breakthrough:** By pruning the search space through Entropy thresholds, we show a constant-factor reduction in the **Token-to-Solution Ratio (TSR)**, making DualMemoryKG more scalable than traditional Dense Retrieval for long-context multi-hop tasks.
+**Tuyên bố Khoa học:** DualMemoryKG hoạt động như một bộ lọc tối ưu loại bỏ nhiễu lĩnh vực trong khi vẫn giữ lại các "Biến bất biến" (Invariants) cần thiết cho suy luận có căn cứ, đạt tới giới hạn **Thống kê Đầy đủ** (Sufficient Statistic) cho truy vấn cụ thể.
 
 ---
 
-## 7. Metadynamics: Parameter Stability & Uncertainty-Triggered HIL
+## 6. Phân tích: Độ phức tạp Tính toán vs. Mật độ Suy luận
 
-We define the system's **Meta-stability** as its ability to converge even under dynamic parameter tuning ($\beta, \gamma$).
+Chúng tôi chứng minh rằng chi phí gia tăng của việc lựa chọn dựa trên Lý thuyết Thông tin là không đáng kể so với việc giảm chi phí suy luận của LLM.
 
-**Formal Trigger for Human-in-the-Loop (HIL):**
-Let $\Psi$ be the cognitive gap measured by the Equilibrium Arbitrator. A request for human intervention is triggered if:
-$$ \Psi(q, \mathcal{P}) > \tau \text{ and } \frac{\partial \Psi}{\partial t} \approx 0 $$
-where $\tau$ is the critical uncertainty threshold and $t$ is the iteration count.
+**Độ phức tạp:**
+Chiến sách duyệt vận hành trong $O(T \cdot K \cdot \log V)$, trong đó $T$ là số bước nhảy suy luận, $K$ là hệ số nhánh, và $V$ là số lượng đỉnh. 
 
-**Academic Claim:** This mechanism ensures that DualMemoryKG possesses **Epistemic Humility**, knowing when its internal and external knowledge sources are insufficient to provide a grounded answer, thereby reaching the highest tier of **Trustworthy and Interpretable AI**.
+**Đột phá Hiệu suất:** Bằng cách cắt tỉa không gian tìm kiếm thông qua ngưỡng Entropy, chúng tôi cho thấy sự giảm hệ số hằng số trong **Tỷ lệ Token trên Giải pháp (Token-to-Solution Ratio - TSR)**, giúp DualMemoryKG có khả năng mở rộng tốt hơn so với các phương pháp Dense Retrieval truyền thống cho các nhiệm vụ suy luận đa bước ngữ cảnh dài.
+
+---
+
+## 7. Siêu động lực học: Độ ổn định Tham số & HIL kích hoạt bởi Độ bất định
+
+Chúng tôi định nghĩa **Tính siêu ổn định** (Meta-stability) của hệ thống là khả năng hội tụ ngay cả dưới sự điều chỉnh tham số động ($\beta, \gamma$).
+
+**Kích hoạt Hình thức cho Con người tham gia (Human-in-the-Loop - HIL):**
+Gọi $\Psi$ là khoảng cách nhận thức được đo bởi Cơ chế Phân xử Cân bằng. Một yêu cầu can thiệp của con người được kích hoạt nếu:
+$$ \Psi(q, \mathcal{P}) > \tau \quad \land \quad \frac{\partial \Psi}{\partial t} \approx 0 $$
+trong đó $\tau$ là ngưỡng bất định tới hạn và $t$ là số lần lặp.
+
+**Tuyên bố Khoa học:** Cơ chế này đảm bảo rằng DualMemoryKG sở hữu sự **Khiêm tốn Nhận thức** (Epistemic Humility), biết khi nào các nguồn tri thức nội tại và ngoại tại của nó không đủ để cung cấp một câu trả lời có căn cứ, từ đó đạt tới cấp độ cao nhất của **AI Tin cậy và Có thể giải thích được**.
