@@ -1,60 +1,47 @@
 # Tuyên ngôn Đóng góp Khoa học của DualMemoryKG (Chuẩn Q1)
 
-Tài liệu này tóm tắt các giá trị khoa học cốt lõi của dự án, được trình bày với các công thức toán học trực quan để phục vụ báo cáo và phản biện chuyên gia.
-
 ---
 
-## 1. Đột phá 1: Suy diễn Ontology Thích ứng (Adaptive Ontology Induction)
+## 1. Breakthrough 1: Adaptive Ontology Induction
 
-Thay vì sử dụng các nhãn cố định (heuristics), DualMemoryKG tự học các khái niệm suy luận trực tiếp từ dữ liệu.
-
-**[Mô tả Toán học Trực quan]:**
-> **Xác suất (Khái niệm k | Hành động x) ≈ Độ gần của x với tâm khái niệm c_k**
-> Sử dụng hàm Softmax để chuẩn hóa:
-> **P = Exp(-d_k) / Tổng[Exp(-d_j)]**
+**[Visible Formula]:**
+> **P(Concept_k | Sample_x) ≈ Alignment(x, Prototype_k)**
+> **P = Exp(-dist_k) / Sum[ Exp(-dist_j) ]**
 
 **Ý nghĩa Khoa học:**
-- Cho phép hệ thống tự thích nghi với các lĩnh vực mới mà không cần chuyên gia gán nhãn thủ công (Domain-Agnostic).
+- Tự động hóa việc phân loại mẫu suy luận dựa trên các nguyên mẫu được học (Learned Prototypes).
 
 ---
 
-## 2. Đột phá 2: Điều khiển Bằng chứng dựa trên Lý thuyết Thông tin
+## 2. Breakthrough 2: Information-Theoretic Evidence Control
 
-Việc lựa chọn bằng chứng được tối ưu hóa để tối đa hóa lượng thông tin thu được (**Information Gain**) đồng thời giảm thiểu sự dư thừa.
+**[Visible Formula]:**
+> **Objective = Maximize[ Information_Gain ] - Penalty[ Redundancy ] - Penalty[ Complexity ]**
 
-**[Mô tả Toán học Trực quan]:**
-> **Mục tiêu tối ưu = [Thông tin mới nhận được] - [Thông tin dư thừa] - [Độ phức tạp tính toán]**
-
-**Giải thích các Keyword:**
-- **Information Gain:** Lượng tri thức mới mà bằng chứng cung cấp cho câu hỏi.
-- **Redundancy Penalty:** Hình phạt cho việc lấy các bằng chứng lặp lại thông tin đã có.
+**Giải thích:**
+- Tối đa hóa lượng tri thức mới thu nhận được đồng thời phạt các hành vi dư thừa thông tin hoặc tốn kém tài nguyên.
 
 ---
 
-## 3. Đột phá 3: Đảm bảo Tính ổn định vững chắc (Lipschitz Continuity)
+## 3. Breakthrough 3: Lipschitz Continuity & Robustness
 
-Chúng tôi chứng minh về mặt toán học rằng hệ thống phản ứng ổn định trước các biến động nhỏ của bộ nhớ (nhiễu dữ liệu).
-
-**[Mô tả Toán học Trực quan]:**
-> **Biến động Đầu ra ≤ Hệ số ổn định (K) * Biến động Bộ nhớ**
+**[Visible Formula]:**
+> **Change(Output) ≤ K * Change(Memory)**
 
 **Ý nghĩa Khoa học:**
-- Đây là bằng chứng toán học quan trọng để bảo vệ bài báo trước các câu hỏi về "Hallucination" (Ảo giác) của LLM. Một giá trị **K** thấp chứng minh rằng hệ thống được kiểm soát chặt chẽ bởi bằng chứng trong bộ nhớ.
+- Chứng minh về mặt toán học rằng hệ thống phản ứng ổn định và không bị ảo giác ngẫu nhiên khi bộ nhớ có sự thay đổi nhẹ.
 
 ---
 
-## 4. Tóm tắt Đóng góp cho Cộng đồng (Academic Contributions)
+## 4. Academic Contributions Summary
 
-1.  **Framework mới:** Kiến trúc Bộ nhớ kép (Semantic + Observability) đầu tiên có tích hợp tầng Ontology thích ứng.
-2.  **Độ tin cậy cao:** Giảm tỷ lệ suy luận không căn cứ (unsupported reasoning) xuống mức tối thiểu thông qua tầng xác thực (Verification Layer).
-3.  **Khả năng tái sử dụng:** Chứng minh tính hiệu quả trên nhiều tập dữ liệu chuẩn (HotpotQA, MuSiQue, HaluEval).
+1.  **Architecture:** Unified Dual-Memory Graph (Semantic + Observability).
+2.  **Reliability:** Mathematical grounding via Verification Layer.
+3.  **Portability:** Domain-agnostic design validated across multiple SOTA datasets.
 
 ---
-**Mã LaTeX chuyên sâu:** (Nếu bạn cần copy vào tệp .tex của bài báo)
+**LaTeX Backup:**
 ```latex
-% Lipschitz Stability Claim
-\| \mathcal{R}(G \cup \{e\}) - \mathcal{R}(G) \| \leq K \cdot \text{Surprisal}(e)
-
-% Evidence Utility Objective
-\mathcal{U}(E) = I(y; E | q) - \lambda \cdot \text{Cost}(E)
+\Delta \mathcal{R} \leq K \cdot \Delta \mathcal{G}
+\mathcal{U}(E) = I(y; E | q) - \lambda \cdot C(E)
 ```

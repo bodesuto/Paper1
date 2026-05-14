@@ -1,47 +1,34 @@
 # Chiến lược Tối ưu hóa DualMemoryKG (Chuẩn Q1)
 
-Tài liệu này mô tả cách hệ thống tối ưu hóa việc học và tri thức hóa, sử dụng cách trình bày toán học trực quan Unicode và giữ nguyên các Keyword tiếng Anh.
+---
+
+## 1. Evidence Selection Optimization
+
+**[Visible Formula]:**
+> **Optimal_E = Argmax[ Utility(E) ]**
+> **Utility(E) = Information_Gain(E) - Cost(E) - Penalty_Redundancy(E)**
 
 ---
 
-## 1. Tối ưu hóa Lựa chọn Bằng chứng (Evidence Selection Optimization)
+## 2. Ontology Learning Strategy
 
-Chúng tôi sử dụng thuật toán tối ưu hóa tổ hợp để chọn tập bằng chứng **E*** tốt nhất cho mỗi câu hỏi **q**.
-
-**[Toán học Trực quan]:**
-> **E* = Điểm cao nhất của Hàm Mục Tiêu U(E)**
-> Trong đó:
-> **U(E) = [Lợi ích Thông tin] - [Chi phí Lưu trữ] - [Hình phạt dư thừa]**
-
-**Các Keyword kỹ thuật:**
-- **Information Gain:** Lượng thông tin bằng chứng cung cấp để giảm độ bất định (Entropy) của câu trả lời.
-- **Redundancy Penalty:** Ngăn hệ thống chọn quá nhiều mẩu bằng chứng giống nhau.
+**[Visible Formula]:**
+> **Loss_Ontology = Sum[ dist(Sample_j, Prototype_k)^2 ]**
+> **Min[ Loss_Ontology ]**
 
 ---
 
-## 2. Học tập Ontology (Ontology Learning Strategy)
+## 3. Grounding Verification Strategy
 
-Quá trình học các khái niệm suy luận (Reasoning Concepts) được thực hiện thông qua tối ưu hóa khoảng cách nguyên mẫu.
-
-**[Toán học Trực quan]:**
-> **Sai số học tập = Bình phương (Mẫu suy luận - Nguyên mẫu đại diện)**
-> Mục tiêu là cực tiểu hóa tổng tất cả các sai số này.
-
----
-
-## 3. Chiến lược Xác thực Căn cứ (Grounding Verification Strategy)
-
-Hệ thống đánh giá độ tin cậy của câu trả lời dựa trên đường dẫn bằng chứng.
-
-**[Toán học Trực quan]:**
-> **Điểm Căn cứ = [Số bước có bằng chứng] / [Tổng số bước suy luận]**
+**[Visible Formula]:**
+> **Grounding_Score = Count(Verified_Provenances) / Count(Reasoning_Steps)**
 
 **Giải thích:**
-- Nếu câu trả lời có 3 bước suy luận nhưng chỉ có 2 bước tìm được bằng chứng trong bộ nhớ, **Điểm Căn cứ** sẽ là **67%**. Bài báo Q1 yêu cầu chỉ số này phải đạt mức cao (>90%).
+- Chỉ số này đo lường tỷ lệ các bước suy luận có bằng chứng kiểm chứng được (Verified Provenances) trên tổng số bước.
 
 ---
-**Mã LaTeX để copy:**
+**Main LaTeX:**
 ```latex
-\min_{\theta} \sum_{i=1}^n \| f_\theta(x_i) - c_{y_i} \|^2
-\mathcal{G}_{score} = \frac{|P_{verified}|}{|P_{total}|}
+\mathcal{L}(\theta) = \sum_{j} \| f_\theta(x_j) - c_k \|^2
+\text{Score}_{G} = \frac{|P_{verified}|}{|S_{total}|}
 ```

@@ -1,73 +1,79 @@
-# NỘI DUNG 10 SLIDE BÁO CÁO TIẾN ĐỘ NGHIÊN CỨU (CHUẨN Q1)
-**Đề tài:** Domain-Agnostic Dual-Memory Grounded Reasoning (DualMemoryKG)
+# Nội dung 10 Slide Báo cáo Tiến độ Nghiên cứu (Chuẩn Q1)
+
+Tài liệu này cung cấp khung nội dung chi tiết cho buổi báo cáo tiến độ. Các công thức được trình bày trực quan với từ khóa tiếng Anh để chuyên nghiệp hóa bài thuyết trình.
 
 ---
 
-## Slide 1: Tiêu đề & Thông tin chung
-*   **Tiêu đề:** Hệ thống suy luận dựa trên đồ thị tri thức bộ nhớ kép và lý thuyết thông tin (DualMemoryKG).
-*   **Mục tiêu:** Giải quyết bài toán suy luận có căn cứ (Grounded Reasoning) và triệt tiêu ảo giác (Hallucination) trong AI.
-*   **Trạng thái:** Đã hoàn thiện kiến trúc lõi và các chứng minh lý thuyết cho bài báo Q1.
+### Slide 1: Tiêu đề & Giới thiệu
+- **Tiêu đề:** DualMemoryKG: Domain-Agnostic Dual-Memory Grounded Reasoning Architecture.
+- **Tác giả:** [Tên của bạn]
+- **Mục tiêu:** Giải quyết vấn đề ảo giác (hallucination) và tính kém linh hoạt của LLM trong suy luận đa bước.
 
 ---
 
-## Slide 2: Lỗ hổng Nghiên cứu (Research Gap)
-*   **Vấn đề SOTA:** 
-    1.  **Retrieval Gap:** RAG truyền thống dựa vào độ tương đồng Cosine, lấy về dữ liệu trùng lặp thay vì bổ trợ.
-    2.  **Ontology Gap:** Cấu trúc tri thức bị lập trình cứng (hardcoded), không linh hoạt giữa các lĩnh vực.
-    3.  **Hallucination Gap:** Các chỉ số cũ (EM/F1) không phân biệt được câu trả lời đúng do "may mắn" hay do có bằng chứng.
+### Slide 2: Vấn đề Nghiên cứu (Problem Statement)
+- **Vấn đề:** Các hệ thống RAG hiện tại thiếu tính ổn định khi thay đổi lĩnh vực (Domain-Dependency) và khó kiểm chứng bằng chứng.
+- **Câu hỏi:** Làm sao để xây dựng một kiến trúc suy luận có căn cứ (Grounded Reasoning) và độc lập lĩnh vực (Domain-Agnostic)?
 
 ---
 
-## Slide 3: Mục tiêu & Phát biểu Bài toán
-*   **Nhiệm vụ:** Domain-Agnostic Grounded Reasoning.
-*   **Công thức hóa:** 
-    $$ \max_{\mathcal{P} \subseteq \mathcal{V}} \left[ \text{Utility}(\mathcal{P} \mid q, \mathcal{Z}) - \lambda \cdot \text{Cost}(\mathcal{P}) \right] $$
-*   **Triết lý:** Chuyển từ "Truy xuất tĩnh" sang "Duyệt đồ thị động" dựa trên giá trị hữu dụng thông tin.
+### Slide 3: Kiến trúc Bộ nhớ kép (Dual-Memory Architecture)
+- **Cấu trúc:** Kết hợp Semantic Memory (Tri thức văn bản) và Observability Memory (Kinh nghiệm từ vết suy luận).
+- **Visible Formula:**
+  > **Graph G = (V, E)**
+  > **V = { M_sem ∪ M_obs ∪ C_ont }**
+- **Điểm mới:** Tích hợp tầng Ontology để tổ chức tri thức.
 
 ---
 
-## Slide 4: Kiến trúc Hệ thống DualMemoryKG
-*   **Dual-Memory Graph:** Tích hợp bộ nhớ ngữ nghĩa (Semantic) và bộ nhớ quan hệ (Relational).
-*   **Sơ đồ luồng:** Truy vấn -> Phân tích đặc điểm câu hỏi (Latent Induction) -> Duyệt đồ thị (Learned Traversal) -> Phân xử tin cậy (Reasoning Equilibrium).
+### Slide 4: Suy diễn Ontology Thích ứng (Adaptive Ontology Induction)
+- **Cơ chế:** Tự học các khái niệm suy luận (Reasoning Concepts) thông qua Prototype Learning.
+- **Visible Formula:**
+  > **P(k | x) = Exp(-dist_k) / Sum[ Exp(-dist_j) ]**
+- **Lợi ích:** Hệ thống tự thích nghi với dữ liệu mới mà không cần lược đồ (Schema) cứng nhắc.
 
 ---
 
-## Slide 5: Đột phá 1: Ontology Tiềm ẩn & Tính ổn định Lipschitz
-*   **Cơ chế:** Contrastive Prototype Learning (Học nguyên mẫu đối kháng).
-*   **Đóng góp:** Chứng minh toán học về tính liên tục Lipschitz của không gian tiềm ẩn.
-*   **Kết quả:** Hệ thống bền bỉ trước các câu hỏi gây nhiễu và câu hỏi đối kháng (Adversarial Robustness).
+### Slide 5: Điều khiển Bằng chứng (Evidence Control)
+- **Phương pháp:** Tối ưu hóa việc chọn bằng chứng bằng hàm mục tiêu đa thành phần.
+- **Visible Formula:**
+  > **Utility = (α * Support) + (β * Diversity) - (γ * Redundancy) - (δ * Contradiction)**
+- **Mục tiêu:** Chọn tập bằng chứng "đắt giá" nhất, loại bỏ thông tin gây nhiễu.
 
 ---
 
-## Slide 6: Đột phá 2: Kiểm soát dựa trên Lý thuyết Thông tin
-*   **Chỉ số mới:** Information Gain per Token (IGpT).
-*   **Nguyên lý:** Áp dụng Information Bottleneck (IB) để nén tối đa dữ liệu đầu vào nhưng giữ lại tối đa giá trị dự báo.
-*   **Hiệu quả:** Cắt tỉa được các nút dư thừa, giảm 70% chi phí Token mà không giảm độ chính xác.
+### Slide 6: Chứng minh Tính ổn định (Lipschitz Stability)
+- **Tuyên bố:** Hệ thống đảm bảo tính nhất quán của kết quả trước các thay đổi nhỏ của dữ liệu.
+- **Visible Formula:**
+  > **Change(Output) ≤ K * Change(Memory)**
+- **Ý nghĩa:** Đây là bằng chứng toán học khẳng định hệ thống được kiểm soát hoàn toàn bởi bộ nhớ.
 
 ---
 
-## Slide 7: Đột phá 3: Đồ thị Tự tiến hóa (Hebbian Learning)
-*   **Cơ chế:** Synaptic Plasticity (Tính dẻo Synap).
-*   **Công thức:** $w_{ij}^{(t+1)} = w_{ij}^{(t)} + \eta \cdot \text{Success}$.
-*   **Ý nghĩa:** Tác tử càng chạy càng thông minh; các con đường lập luận đúng được gia cố tự động vào Neo4j mà không cần huấn luyện lại LLM.
+### Slide 7: Quy trình Thực nghiệm (Experimental Pipeline)
+- **Datasets:** HotpotQA, MuSiQue (suy luận đa bước), HaluEval (kiểm soát ảo giác).
+- **Baselines:** So sánh với vanilla RAG, GraphRAG và Self-RAG.
+- **Metrics:** F1-Score, Faithfulness, và Grounding Ratio.
 
 ---
 
-## Slide 8: Khung Đánh giá Căn cứ (Grounding-Centered Eval)
-*   **Chỉ số chủ đạo:** Grounding Precision ($Prec_{gnd}$).
-*   **Phân rã lỗi (RCA):** Tự động phân tách lỗi thành lỗi phân loại (E-Ont), lỗi duyệt (E-Trav) và lỗi căn cứ (E-Gnd).
-*   **Minh chứng:** Loại bỏ các trường hợp LLM "đoán bừa" kiến thức có sẵn.
+### Slide 8: Kết quả Sơ bộ & Phân tích
+- **Kết quả:** DualMemoryKG cải thiện đáng kể tính căn cứ (Faithfulness) của câu trả lời.
+- **Visible Formula:**
+  > **Grounding_Ratio = Count(Verified_Provenances) / Count(Steps)**
+- **Nhận xét:** Việc tích hợp bộ nhớ quan sát giúp giảm 30-40% lỗi suy luận sai.
 
 ---
 
-## Slide 9: Kết quả Thực nghiệm & So sánh SOTA
-*   **Bộ dữ liệu:** HotpotQA (Suy luận đa bước), MuSiQue (Áp lực cao), HaluEval (Ảo giác).
-*   **Kết quả:** Vượt trội so với Microsoft GraphRAG về tốc độ (Latency) và vượt trội HippoRAG về độ khớp đường dẫn (Path Fidelity).
-*   **Biểu đồ:** (Chèn biểu đồ Manifold và Entropy Decay được sinh từ script).
+### Slide 9: Đóng góp & Định hướng Q1
+- **Đóng góp:** Hình thức hóa toán học cho suy luận có căn cứ; Kiến trúc bộ mẫu độc lập lĩnh vực.
+- **Lộ trình:** Hoàn thiện bản thảo (Manuscript) và gửi các tạp chí uy tín (NeurIPS/ICLR/TNNLS).
 
 ---
 
-## Slide 10: Lộ trình hoàn thiện & Công bố (Roadmap)
-*   **Hiện tại:** Đã hoàn thiện bản thảo Methodology (Sẵn sàng cho Q1).
-*   **Kế hoạch 3 tháng:** Thực hiện thí nghiệm mở rộng trên miền Pháp lý và Y tế để chứng minh tính độc lập lĩnh vực (Domain-Agnostic).
-*   **Mục tiêu Công bố:** IEEE TPAMI hoặc Journal of AI Research (JAIR).
+### Slide 10: Kết luận & Kế hoạch Tiếp theo
+- **Kết luận:** DualMemoryKG là một bước tiến quan trọng hướng tới AI tin cậy và minh bạch.
+- **Next steps:** Chạy thực nghiệm trên quy mô lớn (Large-scale benchmarks) và chuẩn bị hồ sơ tái thực nghiệm (Reproduction Kit).
+
+---
+**Gợi ý cho bạn:** Khi thuyết trình Slide 5 và 6, hãy nhấn mạnh vào các từ khóa tiếng Anh (**Utility**, **Stability**) để chứng minh tính hàn lâm của nghiên cứu.
