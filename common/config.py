@@ -11,9 +11,19 @@ load_dotenv(PROJECT_ROOT / ".env")
 class AppSettings(BaseSettings):
     """Production-grade configuration management using Pydantic."""
     
-    # API Keys
+    # API Keys & Provider Config
+    MODEL_PROVIDER: str = Field(default="google")  # choices: google, openai, anthropic, ollama, groq, mistral, together
     GOOGLE_API_KEY: str = Field(default_factory=lambda: os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY", ""))
-    GEMINI_MODEL_NAME: str = Field(default="gemini-2.5-flash")
+    OPENAI_API_KEY: str = Field(default="")
+    ANTHROPIC_API_KEY: str = Field(default="")
+    GROQ_API_KEY: str = Field(default="")
+    MISTRAL_API_KEY: str = Field(default="")
+    TOGETHER_API_KEY: str = Field(default="")
+    OLLAMA_BASE_URL: str = Field(default="http://localhost:11434")
+
+    # Model Names
+    MODEL_NAME: str = Field(default="gemini-2.5-flash") # Override with gpt-4o, claude-3-5-sonnet, etc.
+    GEMINI_MODEL_NAME: str = Field(default="gemini-2.5-flash") # Fallback for backward compatibility
     GEMINI_EMBEDDING_MODEL: str = Field(default="models/gemini-embedding-001")
     EMBEDDING_VECTOR_DIMENSIONS: int | None = Field(default=None)
 
@@ -91,8 +101,17 @@ class AppSettings(BaseSettings):
 settings = AppSettings()
 
 # Maintain backward compatibility for existing code during transition
+MODEL_PROVIDER = settings.MODEL_PROVIDER
 GOOGLE_API_KEY = settings.GOOGLE_API_KEY
 GEMINI_API_KEY = settings.GOOGLE_API_KEY  # Alias
+OPENAI_API_KEY = settings.OPENAI_API_KEY
+ANTHROPIC_API_KEY = settings.ANTHROPIC_API_KEY
+GROQ_API_KEY = settings.GROQ_API_KEY
+MISTRAL_API_KEY = settings.MISTRAL_API_KEY
+TOGETHER_API_KEY = settings.TOGETHER_API_KEY
+OLLAMA_BASE_URL = settings.OLLAMA_BASE_URL
+
+MODEL_NAME = settings.MODEL_NAME
 GEMINI_MODEL_NAME = settings.GEMINI_MODEL_NAME
 GEMINI_EMBEDDING_MODEL = settings.GEMINI_EMBEDDING_MODEL
 EMBEDDING_VECTOR_DIMENSIONS = settings.EMBEDDING_VECTOR_DIMENSIONS

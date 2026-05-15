@@ -7,8 +7,17 @@ Tài liệu này hướng dẫn bạn thực hiện quy trình thực nghiệm t
 ## 🛠 Bước 1: Chuẩn bị Môi trường (Pre-flight Check)
 Trước khi bắt đầu bất kỳ đợt chạy nào kéo dài hàng chục giờ, bạn **PHẢI** kiểm tra tính sẵn sàng của hạ tầng.
 
-1.  **Cập nhật môi trường:** Đảm bảo `.env` đã có `GEMINI_API_KEY`, `NEO4J_URI`, `NEO4J_PASSWORD`.
-2.  **Chạy script kiểm tra:**
+1.  **Cấu hình .env:** Hệ thống hiện hỗ trợ: **google, openai, anthropic, groq, mistral, together, ollama**.
+    ```env
+    MODEL_PROVIDER=groq      # Lựa chọn: google, openai, anthropic, groq, mistral, together, ollama
+    MODEL_NAME=llama-3.1-70b-versatile  # Hoặc mixtral-8x7b-32768, gpt-4o, v.v.
+    GROQ_API_KEY=gsk_...
+    ```
+2.  **Cài đặt các gói phụ trợ (tùy theo provider):**
+    ```bash
+    pip install langchain-openai langchain-anthropic langchain-groq langchain-mistralai
+    ```
+3.  **Chạy script kiểm tra:**
     ```bash
     python scripts/pre_flight_check.py
     ```

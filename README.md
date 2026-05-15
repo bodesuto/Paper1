@@ -141,22 +141,51 @@ graph TD
     end
 ```
 
-## 📁 Repository Structure (Product Standard)
+## � Codebase Map (Tree View)
+
+Dưới đây là sơ đồ tổ chức toàn bộ source code của **DualMemoryKG**:
 
 ```text
 DualMemoryKG/
-├── core/                   # (Planned) Python package root
-├── agents/                 # ReAct & Reflexion implementations
-├── common/                 # Pydantic-based configuration & logging
-├── diagnostics/            # RCA & Error Decomposition Engine
-├── docs/                   # Full academic and technical documentation
-├── eval/                   # Grounding-centered metrics and summaries
-├── knowledge_graph/        # Neo4j Graph schemas and queries
-├── reasoning_ontology/     # Contrastive Latent Ontology Learner
-├── traversal_policy/       # Uncertainty-Aware Evidence Selector
-├── scripts/                # Entry points for experiments and pipelines
-├── pyproject.toml          # Packaging and tooling configuration
-└── .env                    # Environment variables (Pydantic validated)
+├── agents/                       # Tầng lập luận (Core Agents)
+│   ├── src/
+│   │   ├── react.py              # Logic ReAct (Reason + Act)
+│   │   └── reflexion.py          # Logic Self-Correction (Phản hồi tự động)
+│   └── prompts/                  # Prompt templates cho các tập dữ liệu
+├── knowledge_graph/              # Tầng quản lý tri thức (Dual-Memory)
+│   ├── src/
+│   │   ├── retrieve_data.py      # Truy vấn Neo4j & ChromaDB
+│   │   ├── retrieve_heuristic.py # [Mấu chốt] Information-Theoretic Control
+│   │   └── insert_obs.py         # Ghi vết suy luận vào Đồ thị (Observability)
+│   └── schema/                   # Định nghĩa cấu trúc Node & Edge
+├── reasoning_ontology/           # Thành phần học Ontology (Tầng 3)
+│   ├── induction.py              # Logic Contrastive Latent Induction
+│   └── prototypes.py             # Quản lý các Reasoning Prototypes
+├── traversal_policy/             # Thành phần điều khiển bước đi (Tầng 3)
+│   ├── policy_model.py           # Mô hình học máy chọn bước đi tiếp theo
+│   └── reward.py                 # Hàm thưởng (Reward function) cho Policy
+├── common/                       # Hạ tầng kỹ thuật dùng chung
+│   ├── config.py                 # Quản lý cấu hình Pydantic & API Keys
+│   ├── models.py                 # Factory Adapter cho đa LLM Provider
+│   ├── rate_limiter.py           # Quản lý RPM & Cost Monitor tiêu chuẩn
+│   └── observability.py          # Tích hợp Langfuse (Tracing)
+├── diagnostics/                  # Tầng chẩn đoán & Phân tích lỗi
+│   ├── src/
+│   │   ├── rca.py                # Root Cause Analysis (Phân tích nguyên nhân)
+│   │   └── error_taxonomy.py     # Định nghĩa các loại lỗi E-Ont, E-Trav, E-Gnd
+├── eval/                         # Hệ thống đánh giá học thuật
+│   ├── test/
+│   │   ├── matrics.py            # Tối ưu DeepEval Metrics (Accuracy, Faithfulness)
+│   │   └── grounding_metrics.py  # Các chỉ số Grounding đặc thù (IG, Entropy)
+├── scripts/                      # Trung tâm thực thi (Command Center)
+│   ├── pre_flight_check.py       # Kiểm tra hệ thống trước khi chạy (VITAL)
+│   ├── run_controlled_full.py    # Script chạy 10,000 câu (Resume, Cost-Gate)
+│   ├── run_analysis_pipeline.py  # Mining kết quả & Tự động sinh biểu đồ
+│   └── run_ablation_suite.py     # Chạy nghiên cứu bóc tách thành phần
+├── reports/                      # Nơi lưu trữ biểu đồ và báo cáo (CSV, PNG)
+├── docs/                         # Toàn bộ tài liệu hướng dẫn & Chứng minh
+├── .env                          # Biến môi trường (API Key, URI)
+└── pyproject.toml                # Quản lý dependency & environment
 ```
 
 ## 🚀 Fast-Track Executive Guide (10,000 Queries)
