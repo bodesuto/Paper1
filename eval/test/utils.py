@@ -40,6 +40,10 @@ class FullReActTrace(BaseCallbackHandler):
     def __init__(self):
         self.trace = ""
 
+    def reset(self):
+        """Clear the trace buffer before each new question to prevent cross-contamination."""
+        self.trace = ""
+
     # # Capture the LLM prompt before generation
     def on_llm_start(self, serialized, prompts, **kwargs):
         for p in prompts:

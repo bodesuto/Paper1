@@ -1,4 +1,5 @@
 import json
+import time
 from types import SimpleNamespace
 
 from deepeval.metrics import (
@@ -13,6 +14,11 @@ from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval.test_case import LLMTestCaseParams
 
 from common.deepeval_models import get_deepeval_llm
+from common.rate_limiter import RateLimiter
+
+# Module-level rate limiter shared by all metric calls.
+# 12 calls/min + 5s minimum delay protects Gemini API from 429 / quota errors.
+_eval_limiter = RateLimiter(calls_per_minute=12, min_delay_s=5.0)
 
 
 def build_instruction_inconsistency_metric(model):
@@ -286,15 +292,37 @@ build_context_inconsistency_metric = build_context_inconsistency_metric(model=mo
 build_logical_inconsistency_metric = build_logical_inconsistency_metric(model=model)
 
 
-def safe_measure(metric, test_case):
-    try:
-        metric.measure(test_case)
-        if getattr(metric, "success", None) is None:
-            metric.success = True
-        return metric
-    except Exception as exc:
-        return SimpleNamespace(
-            score=0.0,
-            success=False,
-            reason=f"metric_error: {type(exc).__name__}: {exc}",
-        )
+def safe_measure(metric, test_case, max_retries: int = 3):
+    """Call metric.measure() with rate limiting and exponential backoff.
+
+    - Respects global ``_eval_limiter`` to prevent Gemini API 429 errors.
+    - Retries up to ``max_retries`` times on transient errors (503/429/timeout).
+    - Returns a safe SimpleNamespace on permanent failure so the run continues.
+    """
+    _eval_limiter.wait()  # Rate limit BEFORE every DeepEval API call
+
+    for attempt in range(max_retries):
+        try:
+            metric.measure(test_case)
+            if getattr(metric, "success", None) is None:
+                metric.success = True
+            return metric
+        except Exception as exc:
+            err_str = str(exc).lower()
+            is_transient = any(code in err_str for code in ["429", "503", "quota", "timeout", "unavailable", "rate"])
+
+            if is_transient and attempt < max_retries - 1:
+                backoff = (2 ** attempt) * 10  # 10s, 20s, 40s
+                print(f"  [safe_measure] Transient error ({type(exc).__name__}). Retry {attempt+1}/{max_retries-1} in {backoff}s...")
+                time.sleep(backoff)
+                _eval_limiter.wait()  # Re-acquire slot after backoff
+                continue
+
+            # Permanent failure or exhausted retries
+            return SimpleNamespace(
+                score=0.0,
+                success=False,
+                reason=f"metric_error[attempt={attempt+1}]: {type(exc).__name__}: {exc}",
+            )
+    # Should never reach here
+    return SimpleNamespace(score=0.0, success=False, reason="metric_error: max_retries exhausted")

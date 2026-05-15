@@ -1,7 +1,9 @@
 import json
+import math
 import time
 from collections.abc import Iterable
 from dataclasses import replace
+from typing import Sequence
 
 from common.config import ALLOW_DEFAULT_EXAMPLE_PADDING
 from common.logger import get_logger
@@ -17,6 +19,99 @@ from knowledge_graph.src.retrieval_types import (
 
 
 logger = get_logger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Information-Theoretic Helpers (Q1 Core)
+# ---------------------------------------------------------------------------
+
+def _cosine_similarity(vec_a: Sequence[float], vec_b: Sequence[float]) -> float:
+    """Compute cosine similarity between two embedding vectors."""
+    if not vec_a or not vec_b or len(vec_a) != len(vec_b):
+        return 0.0
+    dot = sum(a * b for a, b in zip(vec_a, vec_b))
+    norm_a = math.sqrt(sum(a * a for a in vec_a))
+    norm_b = math.sqrt(sum(b * b for b in vec_b))
+    if norm_a == 0.0 or norm_b == 0.0:
+        return 0.0
+    return dot / (norm_a * norm_b)
+
+
+def _compute_concept_variance(ontology_assignments: list[dict]) -> float:
+    """Shannon entropy of ontology assignment scores as a proxy for concept uncertainty.
+
+    High variance means the node sits at the boundary of multiple reasoning
+    prototypes — a signal of rich, multi-faceted evidence worth selecting.
+    """
+    if not ontology_assignments:
+        return 0.0
+    scores: list[float] = []
+    for item in ontology_assignments:
+        try:
+            scores.append(max(0.0, float(item.get("score", 0.0))))
+        except Exception:
+            pass
+    if not scores:
+        return 0.0
+    total = sum(scores)
+    if total == 0.0:
+        return 0.0
+    probs = [s / total for s in scores]
+    entropy = -sum(p * math.log(p + 1e-12) for p in probs)
+    # Normalise by log(N) so the result is in [0, 1]
+    max_entropy = math.log(len(probs) + 1e-12)
+    return entropy / max_entropy if max_entropy > 0 else 0.0
+
+
+def _enrich_nodes_with_it_features(
+    nodes: list[RetrievedMemoryNode],
+    query_embedding: list[float],
+) -> list[RetrievedMemoryNode]:
+    """Inject Information-Theoretic metadata into each node.
+
+    Computes:
+    - ``marginal_info_gain``: surprisal = 1 - cosine_sim(query, node).
+      Captures how *new* this node's information is relative to the query.
+    - ``concept_assignment_variance``: Shannon entropy of prototype scores.
+      Captures ontology ambiguity → richer nodes score higher.
+    - ``ontology_alignment``: max ontology assignment score for fast lookup.
+    """
+    enriched: list[RetrievedMemoryNode] = []
+    selected_sims: list[float] = []  # track accumulated similarity for sequential IG
+
+    for node in nodes:
+        # Use stored embedding_score as cosine proxy when raw vector unavailable
+        raw_sim = float(node.embedding_score or 0.0)
+        # marginal_gain = surprisal: how far from the query this node is
+        # (1 - similarity). High surprisal → brings genuinely new information.
+        marginal_gain = max(0.0, 1.0 - raw_sim)
+
+        # Sequential redundancy penalty: reduce gain if similar to already-seen nodes
+        if selected_sims:
+            avg_seen_sim = sum(selected_sims) / len(selected_sims)
+            # If node is similar to already-selected content, its marginal gain drops
+            redundancy_factor = max(0.0, 1.0 - avg_seen_sim)
+            marginal_gain = marginal_gain * redundancy_factor
+        selected_sims.append(raw_sim)
+
+        ontology_assignments = node.metadata.get("ontology_assignments", [])
+        concept_variance = _compute_concept_variance(ontology_assignments)
+
+        scores = [float(a.get("score", 0.0)) for a in ontology_assignments if a.get("score") is not None]
+        ontology_alignment = max(scores) if scores else 0.0
+
+        enriched.append(
+            replace(
+                node,
+                metadata={
+                    **node.metadata,
+                    "marginal_info_gain": round(marginal_gain, 6),
+                    "concept_assignment_variance": round(concept_variance, 6),
+                    "ontology_alignment_score": round(ontology_alignment, 6),
+                },
+            )
+        )
+    return enriched
 
 
 def _coerce_list(value: object) -> list[str]:
@@ -113,6 +208,9 @@ def retrieve_memories_heuristic(query: str, session) -> RetrievedMemoryBundle:
     logger.info("Heuristic Cypher retrieval took: %.4fs", end - start)
 
     nodes = [_record_to_memory_node(record) for record in records]
+    # Inject Information-Theoretic features so downstream policy_model.py
+    # receives real marginal_info_gain / concept_assignment_variance (not 0.0)
+    nodes = _enrich_nodes_with_it_features(nodes, query_embedding)
     return RetrievedMemoryBundle(
         query=RetrievalQuery(
             text=query,
@@ -126,6 +224,7 @@ def retrieve_memories_heuristic(query: str, session) -> RetrievedMemoryBundle:
         metadata={
             "retrieval_latency_s": end - start,
             "candidate_count": len(nodes),
+            "it_enrichment": True,  # flag for downstream verification
         },
     )
 

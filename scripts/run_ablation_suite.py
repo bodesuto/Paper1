@@ -14,14 +14,16 @@ from eval.test.reflexion_test import test_dual_memory as reflexion_test_dual_mem
 
 
 def run_test_safe(test_func, data_path, output_file, **kwargs):
-    if Path(output_file).exists():
-        print(f"Skipping {output_file} (already exists)")
-        return
+    # NOTE: Do NOT skip if file exists — the Resume-on-Failure logic inside
+    # test_dual_memory will handle skipping already-processed rows.
+    # Skipping here would prevent recovery from partial runs.
     print(f"\n>>> Running ablation: {output_file.name}")
     try:
         test_func(data_path, output_file, **kwargs)
     except Exception as e:
+        import traceback
         print(f"FAILED ablation {output_file.name}: {e}")
+        traceback.print_exc()
 
 def main():
     parser = argparse.ArgumentParser(description="Run a compact ablation suite across baseline/heuristic/learned modes.")
