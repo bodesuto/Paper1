@@ -1,5 +1,8 @@
 # Run Order
 
+> [!IMPORTANT]
+> For the latest high-reliability experimental pipeline (10,000 queries), use: [**EXPERIMENT_GUIDE_V2.md**](../EXPERIMENT_GUIDE_V2.md)
+
 For the full Vietnamese guide, see [REPRODUCTION_GUIDE_VI.md](./REPRODUCTION_GUIDE_VI.md).
 For implemented novelty/status, see [CONTRIBUTIONS_AND_STATUS_VI.md](./CONTRIBUTIONS_AND_STATUS_VI.md).
 For failure recovery, see [TROUBLESHOOTING_VI.md](./TROUBLESHOOTING_VI.md).

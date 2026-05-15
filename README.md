@@ -159,32 +159,28 @@ DualMemoryKG/
 └── .env                    # Environment variables (Pydantic validated)
 ```
 
-## 🚀 Quick Start
+## 🚀 Fast-Track Executive Guide (10,000 Queries)
 
-### 1. Installation
-This project is packaged for easy installation. We recommend using a virtual environment.
+To support a **Q1 publication**, we have implemented a high-reliability experiment pipeline with automated SOTA comparison.
+
+### 1. Pre-flight Check
+Ensure your environment is stable and keys are valid.
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -e ".[dev]"
+python scripts/pre_flight_check.py
 ```
 
-### 2. Configuration
-Copy `.env.example` to `.env` and configure your API keys and Neo4j credentials. 
-The system uses **Pydantic** for fail-fast configuration validation.
-```bash
-cp .env.example .env
-```
+### 2. Execution (Step-by-Step)
+For a full detailed guide, please refer to: [**EXPERIMENT_GUIDE_V2.md**](./EXPERIMENT_GUIDE_V2.md)
 
-### 3. Running the Pipeline
-To run a full ablation suite to generate Q1 comparative results:
-```bash
-python scripts/run_ablation_suite.py --agent react
-```
+Recommended sequence for 10k run:
+1.  **Probe (100 rows)**: `python scripts/run_controlled_full.py --strategy heuristic --probe`
+2.  **Full Run**: `python scripts/run_controlled_full.py --strategy heuristic`
+3.  **Analysis**: `python scripts/run_analysis_pipeline.py`
 
-To run the Deep Error Decomposition analysis:
+### 3. Deep Error Decomposition
+After running the experiments, perform automated RCA to prove grounding:
 ```bash
-python scripts/run_rca_decomposition.py --rca-json output/your_rca_results.json
+python scripts/run_rca_decomposition.py --rca-json output/your_results.json
 ```
 
 ## 📖 Documentation

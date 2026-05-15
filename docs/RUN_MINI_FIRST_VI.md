@@ -1,5 +1,8 @@
 # Huong Dan Chay Tung Step Mot Tren Du Lieu Nho
 
+> [!IMPORTANT]
+> Nếu mục tiêu của bạn là chạy thực nghiệm Full-Scale (10,000 câu hỏi) cho bài báo Q1, hãy sử dụng quy trình đã được tối ưu hóa tại đây: [**EXPERIMENT_GUIDE_V2.md**](../EXPERIMENT_GUIDE_V2.md)
+
 Tai lieu nay danh cho muc tieu:
 
 - chay repo thong luong truoc

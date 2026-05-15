@@ -1,5 +1,8 @@
 # HƯỚNG DẪN CHẠY HỆ THỐNG DUALMEMORYKG (STEP-BY-STEP)
 
+> [!IMPORTANT]
+> Đối với quy trình thực nghiệm quy mô lớn (10,000 câu hỏi) đã được tối ưu hóa cho bài báo Q1, vui lòng tham khảo: [**EXPERIMENT_GUIDE_V2.md**](../EXPERIMENT_GUIDE_V2.md)
+
 Tài liệu này hướng dẫn bạn từ lúc bắt đầu cho đến khi ra được kết quả nghiên cứu cuối cùng.
 
 ---

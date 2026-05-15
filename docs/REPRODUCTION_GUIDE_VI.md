@@ -1,5 +1,8 @@
 # Huong Dan Tai Hien Repo Chi Tiet
 
+> [!IMPORTANT]
+> Đối với quy trình thực nghiệm hiệu năng cao (10,000 câu hỏi) cho bài báo Q1, hãy sử dụng hướng dẫn mới nhất tại đây: [**EXPERIMENT_GUIDE_V2.md**](../EXPERIMENT_GUIDE_V2.md)
+
 Tai lieu nay bam theo code hien tai cua repo sau migration sang Langfuse.
 
 No bao gom:
